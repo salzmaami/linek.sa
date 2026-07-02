@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" role="img" aria-labelledby="title">
+  <title id="title">Linek لاينك</title>
+  <defs>
+    <linearGradient id="linek-lockup-gradient" x1="8" y1="18" x2="74" y2="82" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7B35F4"/>
+      <stop offset=".54" stop-color="#7B35F4"/>
+      <stop offset=".78" stop-color="#4D7DFA"/>
+      <stop offset="1" stop-color="#328CFA"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <path d="M20 22v34c0 8.7 5.4 14 14.4 14H62" fill="none" stroke="url(#linek-lockup-gradient)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M36 43h15" fill="none" stroke="url(#linek-lockup-gradient)" stroke-width="11" stroke-linecap="round"/>
+    <circle cx="62" cy="23" r="8" fill="#328CFA"/>
+  </g>
+  <text x="102" y="62" fill="#05050D" font-family="Outfit, Arial, sans-serif" font-size="44" font-weight="800">Linek</text>
+  <text x="310" y="62" fill="#05050D" font-family="Manchettefine, Tahoma, Arial, sans-serif" font-size="41" font-weight="800" text-anchor="middle" direction="rtl">لاينك</text>
+</svg>
