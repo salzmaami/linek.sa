@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linek | صفحة الضيف</title>
+    <link rel="icon" href="assets/linek-mark.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="journey.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt="" /><span>لاينك</span></a>
+        <nav aria-label="تنقل صفحة الضيف">
+          <a href="owner.html">تجربة المالك</a>
+          <a class="active" href="stay.html">صفحة الضيف</a>
+          <a href="payment.html">صفحة الدفع</a>
+        </nav>
+        <a class="pill ghost" href="owner.html">تعديل بيانات المكان</a>
+      </header>
+
+      <section class="intro-gate" id="introGate">
+        <div class="panel tint">
+          <span class="eyebrow">حجز موثق من Linek</span>
+          <h1 class="page-title">قبل ما تحجز، تأكدنا من أساسيات الثقة</h1>
+          <p>هذه الصفحة ليست رابط دفع عشوائي. Linek يراجع مقدم الخدمة، بيانات المكان، السياسات، ووسيلة استلام المدفوعات الخاصة بالمالك حتى تكون الصورة واضحة لك قبل الطلب.</p>
+          <div class="trust-checks">
+            <span>هوية مقدم الخدمة واضحة</span>
+            <span>السياسات والتوفر ظاهرة</span>
+            <span>الدفع عبر رابط المالك</span>
+          </div>
+          <div class="hero-actions">
+            <button class="pill" id="startBooking" type="button">يلا نبدأ الحجز</button>
+            <a class="pill flat" id="linekWhatsAppIntro" href="https://wa.me/966570547475" target="_blank" rel="noreferrer">واتساب Linek</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="booking-page booking-area" id="bookingArea">
+        <div class="guest-main">
+          <section class="panel" id="placeChooserPanel">
+            <span class="eyebrow">أماكن المالك</span>
+            <h2>اختر المكان المناسب</h2>
+            <div class="place-picker" id="guestPlacePicker"></div>
+          </section>
+
+          <div class="gallery"><img id="guestImage" src="assets/chalet-hero.png" alt="صورة المكان" /></div>
+          <section class="panel">
+            <span class="badge brand-badge" id="guestBadge"><span>موثق من</span><span class="linek-badge-word"><img src="assets/linek-mark.svg" alt="" /><b>Linek</b></span></span>
+            <h1 class="page-title" id="guestPlaceName">شاليه سُكون</h1>
+            <p id="guestDescription">صفحة حجز موثقة تبني الثقة قبل الدفع.</p>
+            <div class="status-grid">
+              <div class="status-card"><b id="guestCity">الرياض</b><span>المدينة</span></div>
+              <div class="status-card"><b id="guestType">شاليه</b><span>نوع المكان</span></div>
+              <div class="status-card"><b id="guestStayType">كاملة</b><span>نوع الإقامة</span></div>
+              <div class="status-card"><b id="guestCheckIn">4:00 مساءً</b><span>الدخول</span></div>
+              <div class="status-card"><b id="guestCheckOut">12:00 ظهراً</b><span>الخروج</span></div>
+              <div class="status-card"><b id="guestNationalAddress">ABCD1234</b><span>العنوان الوطني</span></div>
+            </div>
+            <div class="hero-actions">
+              <a class="pill ghost" id="guestMapLink" href="https://maps.google.com/?q=Riyadh" target="_blank" rel="noreferrer">فتح الموقع في Google Maps</a>
+            </div>
+          </section>
+
+          <section class="panel">
+            <span class="eyebrow">لماذا هذا الحجز موثوق؟</span>
+            <ul class="trust-list">
+              <li>تمت مراجعة مقدم الخدمة وبيانات المكان وفق معايير Linek.</li>
+              <li id="paymentTrustLine">وسيلة الدفع المعروضة هي رابط يخص المالك وليس حساب Linek.</li>
+              <li>السعر والسياسات والتوفر ظاهرة قبل طلب الحجز.</li>
+              <li>إذا احتجت مساعدة، تقدر تتواصل مع المالك أو Linek عبر واتساب.</li>
+            </ul>
+            <div class="contact-actions">
+              <a class="pill flat" id="merchantWhatsApp" href="#" target="_blank" rel="noreferrer">واتساب المالك</a>
+              <a class="pill ghost" href="https://wa.me/966570547475" target="_blank" rel="noreferrer">واتساب Linek</a>
+            </div>
+          </section>
+
+          <section class="panel">
+            <span class="eyebrow">السياسات</span>
+            <h2>قبل ما تطلب الحجز</h2>
+            <p><b>الإلغاء:</b> <span id="guestCancelPolicy"></span></p>
+            <p><b>تعليمات المكان:</b> <span id="guestRules"></span></p>
+          </section>
+        </div>
+
+        <aside class="booking-sidebar">
+          <form class="panel" id="bookingForm">
+            <span class="eyebrow">طلب حجز</span>
+            <h2>اختر اليوم المناسب</h2>
+            <div class="date-grid" id="guestDates"></div>
+            <label class="field"><span>اسم الضيف</span><input id="guestName" required minlength="2" pattern="^[\u0600-\u06FFa-zA-Z ]{2,}$" placeholder="مثال: سلطان العتيبي" title="اكتب الاسم بحروف فقط، حرفين على الأقل" /></label>
+            <label class="field"><span>رقم الجوال</span><input id="guestPhone" required inputmode="tel" pattern="^05[0-9]{8}$" placeholder="05xxxxxxxx" title="اكتب رقم جوال سعودي يبدأ بـ 05 ويتكون من 10 أرقام" /></label>
+            <div class="summary-row"><span>السعر</span><b id="selectedPrice">-</b></div>
+            <div class="summary-row"><span>الحالة التالية</span><b>بانتظار موافقة المالك</b></div>
+            <div class="warning-box">يبقى الطلب بانتظار موافقة المالك لمدة 30 دقيقة. إذا لم يتم قبوله أو إكماله، يلغى حتى لا يبقى معلقاً.</div>
+            <button class="pill" type="submit">إرسال طلب الحجز</button>
+          </form>
+        </aside>
+      </section>
+    </main>
+    <div class="toast" id="toast">تم</div>
+    <script src="linek-config.js"></script>
+    <script src="stay.js"></script>
+  </body>
+</html>

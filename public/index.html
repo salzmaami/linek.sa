@@ -67,7 +67,7 @@
                   <small>العمارية، الرياض</small>
                   <div class="place-title-row">
                     <h2 id="screenPlaceName">شاليه سُكون</h2>
-                    <a class="verified-badge" href="#verified" aria-label="معنى موثق من Linek"><span>✓</span> موثق من Linek</a>
+                    <a class="verified-badge" href="#verified" aria-label="معنى موثق من Linek"><span>✓</span> موثق من <span class="verified-linek-word"><img src="assets/linek-mark.svg" alt="" /><b>Linek</b></span></a>
                   </div>
                   <p id="screenPrompt">اختر تاريخك المناسب</p>
                 </div>
@@ -225,13 +225,13 @@
           </div>
         </div>
         <form id="contactForm">
-          <label>وش اسمك؟<input name="name" required placeholder="الاسم الكريم" /></label>
-          <label>رقم الجوال<input name="phone" required inputmode="tel" placeholder="05xxxxxxxx" /></label>
-          <label>وش يناسبك؟<select name="topic"><option>أبي أبدأ الباقة الأساسية</option><option>أبي باقة النمو حتى ٥ أماكن</option><option>عندي أكثر من ٥ أماكن وأبي عرض خاص</option><option>أحتاج أفهم طريقة الربط والدفع</option></select></label>
-          <label for="leadPlaces">عدد الأماكن<input id="leadPlaces" name="places" required type="number" min="1" max="99" value="1" /></label>
-          <label>نوع العقار<select name="propertyType"><option>شاليه</option><option>شقة إيجار يومي</option><option>شاليهات وشقق</option><option>غير ذلك</option></select></label>
-          <label>المدينة<input name="city" required placeholder="مثال: الرياض" /></label>
-          <label class="full">اكتب اللي بخاطرك<textarea name="message" rows="4" placeholder="مثال: عندي شاليهين بالرياض وأحتاج صفحة حجز موثقة وتجربة 14 يوم"></textarea></label>
+          <label>وش اسمك؟<input name="name" required minlength="2" pattern="^[\u0600-\u06FFa-zA-Z ]{2,}$" placeholder="الاسم الكريم" title="اكتب الاسم بحروف فقط، حرفين على الأقل" /></label>
+          <label>رقم الجوال<input name="phone" required inputmode="tel" pattern="^05[0-9]{8}$" placeholder="05xxxxxxxx" title="اكتب رقم جوال سعودي يبدأ بـ 05 ويتكون من 10 أرقام" /></label>
+          <label>وش يناسبك؟<select name="topic" required><option>أبي أبدأ الباقة الأساسية</option><option>أبي باقة النمو حتى ٥ أماكن</option><option>عندي أكثر من ٥ أماكن وأبي عرض خاص</option><option>أحتاج أفهم طريقة الربط والدفع</option></select></label>
+          <label for="leadPlaces">عدد الأماكن<input id="leadPlaces" name="places" required type="number" min="1" max="99" value="1" title="اكتب عدد الأماكن من 1 إلى 99" /></label>
+          <label>نوع العقار<select name="propertyType" required><option>شاليه</option><option>شقة إيجار يومي</option><option>شاليهات وشقق</option><option>غير ذلك</option></select></label>
+          <label>المدينة<input name="city" required pattern="^[\u0600-\u06FFa-zA-Z ]{2,}$" placeholder="مثال: الرياض" title="اكتب اسم المدينة بحروف فقط" /></label>
+          <label class="full">اكتب اللي بخاطرك<textarea name="message" rows="4" required minlength="10" placeholder="مثال: عندي شاليهين بالرياض وأحتاج صفحة حجز موثقة وتجربة 14 يوم" title="اكتب ملاحظة لا تقل عن 10 أحرف"></textarea></label>
           <div class="form-trust-note full"><b>نقطة مهمة قبل الإرسال</b><span>لن نطلب بيانات دفع حساسة من هذا النموذج. نستخدم بياناتك للتواصل وتجهيز تجربة آمنة، ثم نراجع طريقة الدفع معك خطوة بخطوة.</span></div>
           <button class="pill-button" type="submit">جهّز طلب البداية</button>
           <div class="lead-summary full" id="leadSummary" hidden></div>
@@ -257,8 +257,8 @@
         <div class="setup-progress"><i class="active"></i><i></i><i></i></div>
         <form id="setupForm">
           <div class="setup-step active" data-step="1"><small>الخطوة ١ من ٣</small><h2 id="setupTitle">كم مكان عندك؟</h2><p>اختر المناسب، وتقدر تغيّره لاحقًا.</p><div class="plan-choice"><button type="button" class="active" data-plan-choice="single"><span>الأساسية</span><b>١٩٩ <i>ر.س / شهر</i></b><small>مكان واحد</small></button><button type="button" data-plan-choice="multi"><span>النمو</span><b>٣٩٩ <i>ر.س / شهر</i></b><small>حتى ٥ أماكن</small></button></div><div class="setup-trial"><b>14 يوم تجربة</b><span>مدفوعات الضيوف لحسابك</span></div><button type="button" class="setup-next">التالي ←</button></div>
-          <div class="setup-step" data-step="2"><small>الخطوة ٢ من ٣</small><h2>عطنا زبدة مكانك</h2><p>هذي المعلومات بنبني منها صفحة الحجز الموثقة ونحدد بيانات التحقق المطلوبة.</p><label>اسم المكان<input id="setupPlaceName" required value="شاليه سُكون" placeholder="مثال: شاليه سُكون" /></label><div class="setup-fields"><label>نوع المكان<select id="setupPlaceType"><option>شاليه</option><option>شقة</option><option>استراحة</option></select></label><label>المدينة<select id="setupCity"><option>الرياض</option><option>جدة</option><option>الخبر</option><option>الطائف</option><option>العلا</option></select></label></div><label class="place-count" id="placeCountField">عدد الأماكن<input id="setupPlaceCount" type="number" min="2" max="5" value="2" /><small>حتى ٥ أماكن في الباقة</small></label><button type="button" class="setup-next">جهّز صفحة الحجز الموثقة ←</button><button type="button" class="setup-back">رجوع</button></div>
-          <div class="setup-step setup-success" data-step="3"><span class="success-mark">✓</span><small>تمّت</small><h2>صفحتك الموثقة جاهزة كتصور أولي</h2><p id="setupSummary">مكان واحد · ١٩٩ ر.س بعد التجربة</p><div class="trial-link"><span id="trialUrl">linek.sa/stay/sukoon</span><button type="button" id="copyTrialLink">نسخ</button></div><div class="trial-expiry"><b>التجربة فعّالة 14 يوم</b><span>الخطوة التالية: نراجع بيانات مقدم الخدمة ووسيلة الدفع قبل عرض شارة التوثيق للضيف.</span></div><button type="button" class="setup-done pill-button" data-close-setup>تمام، الصفحة جاهزة</button></div>
+          <div class="setup-step" data-step="2"><small>الخطوة ٢ من ٣</small><h2>عطنا زبدة مكانك</h2><p>هذي المعلومات بنبني منها صفحة الحجز الموثقة ونحدد بيانات التحقق المطلوبة.</p><label>اسم المكان<input id="setupPlaceName" required minlength="3" value="شاليه سُكون" placeholder="مثال: شاليه سُكون" title="اكتب اسم المكان بثلاثة أحرف على الأقل" /></label><div class="setup-fields"><label>نوع المكان<select id="setupPlaceType" required><option>شاليه</option><option>شقة</option><option>استراحة</option></select></label><label>المدينة<select id="setupCity" required><option>الرياض</option><option>جدة</option><option>الخبر</option><option>الطائف</option><option>العلا</option></select></label></div><label class="place-count" id="placeCountField">عدد الأماكن<input id="setupPlaceCount" type="number" required min="2" max="5" value="2" title="باقة النمو تقبل من 2 إلى 5 أماكن" /><small>حتى ٥ أماكن في الباقة</small></label><button type="button" class="setup-next">جهّز صفحة الحجز الموثقة ←</button><button type="button" class="setup-back">رجوع</button></div>
+          <div class="setup-step setup-success" data-step="3"><span class="success-mark">✓</span><small>تمّت</small><h2>طلب البداية وصلنا</h2><p id="setupSummary">مكان واحد · ١٩٩ ر.س بعد التجربة</p><div class="trial-link"><span id="trialUrl">linek.sa/stay/sukoon</span><button type="button" id="copyTrialLink">نسخ</button></div><div class="trial-expiry"><b>التجربة فعّالة 14 يوم</b><span>الخطوة التالية: نراجع بيانات مقدم الخدمة ووسيلة الدفع قبل عرض شارة التوثيق للضيف.</span></div><div class="setup-success-actions"><button type="button" class="setup-done pill-button outline" data-close-setup>إغلاق</button></div></div>
         </form>
       </section>
     </div>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>لوحة Linek الداخلية</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <a class="brand" href="index.html" aria-label="لاينك الرئيسية"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a>
+        <span class="eyebrow">Linek Admin</span>
+        <h1>لوحة قبول الملاك وتشغيل التجربة</h1>
+        <p>هذه اللوحة مخصصة لفريق Linek: مراجعة طلبات البداية، قبول أو رفض المالك، توليد رابط العقار، ومتابعة تجربة 14 يوم.</p>
+      </div>
+      <form class="token-card" id="tokenForm">
+        <label>
+          <span>التوكن الإداري</span>
+          <input id="adminToken" type="password" autocomplete="off" placeholder="LINEK_ADMIN_TOKEN">
+        </label>
+        <button type="submit">دخول / تحديث</button>
+        <small>لا تستخدم هذه الصفحة بدون HTTPS، ولا تضع التوكن في ملفات الموقع.</small>
+      </form>
+    </header>
+
+    <section class="metrics" aria-label="ملخص التشغيل">
+      <article><b id="metricLeads">-</b><span>طلبات بداية</span></article>
+      <article><b id="metricOwners">-</b><span>ملاك في التجربة</span></article>
+      <article><b id="metricAlerts">-</b><span>تنبيهات تجربة</span></article>
+      <article><b id="metricBookings">-</b><span>طلبات حجز</span></article>
+    </section>
+
+    <section class="toolbar">
+      <button type="button" id="refreshData">تحديث البيانات</button>
+      <button type="button" id="pauseExpired">إيقاف التجارب المنتهية</button>
+      <span id="statusLine">أدخل التوكن لتحميل البيانات.</span>
+    </section>
+
+    <section class="grid">
+      <article class="panel span-7">
+        <div class="panel-head">
+          <h2>طلبات الملاك</h2>
+          <span>قبول / رفض / تحويل إلى عقار</span>
+        </div>
+        <div class="stack" id="leadsList"></div>
+      </article>
+
+      <article class="panel span-5">
+        <div class="panel-head">
+          <h2>تجارب 14 يوم</h2>
+          <span>تنبيه، إيقاف، أو تسجيل اشتراك</span>
+        </div>
+        <div class="stack" id="ownersList"></div>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="panel span-6">
+        <div class="panel-head">
+          <h2>روابط العقارات</h2>
+          <span>صفحات منشورة أو مسودة</span>
+        </div>
+        <div class="stack" id="propertiesList"></div>
+      </article>
+
+      <article class="panel span-6">
+        <div class="panel-head">
+          <h2>طلبات الحجز</h2>
+          <span>قبول، دفع، تأكيد، أو إلغاء</span>
+        </div>
+        <div class="stack" id="bookingsList"></div>
+      </article>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <script src="admin.js"></script>
+</body>
+</html>

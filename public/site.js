@@ -56,6 +56,21 @@ function closeSetup() {
   document.body.style.overflow = '';
 }
 
+function validateSetupStep() {
+  const stepPanel = document.querySelector(`.setup-step[data-step="${setupStep}"]`);
+  if (!stepPanel) return true;
+  const controls = [...stepPanel.querySelectorAll('input, select, textarea')];
+  for (const control of controls) {
+    if (!control.checkValidity()) {
+      control.focus();
+      control.reportValidity();
+      showToast(control.title || 'راجع الخانات المطلوبة');
+      return false;
+    }
+  }
+  return true;
+}
+
 function slugify(value) {
   const clean = value.normalize('NFKD').replace(/[\u064B-\u065F\u0670]/g, '');
   const map = {'شاليه': 'chalet', 'سكون': 'sukoon', 'شقة': 'apartment', 'استراحة': 'retreat'};
@@ -199,12 +214,9 @@ document.querySelectorAll('[data-start-plan]').forEach(button => button.addEvent
 document.querySelectorAll('[data-close-setup]').forEach(button => button.addEventListener('click', closeSetup));
 document.querySelectorAll('[data-plan-choice]').forEach(button => button.addEventListener('click', () => setPlan(button.dataset.planChoice)));
 document.querySelectorAll('.setup-next').forEach(button => button.addEventListener('click', () => {
+  if (!validateSetupStep()) return;
   if (setupStep === 2) {
     const name = document.getElementById('setupPlaceName');
-    if (!name.value.trim()) {
-      name.focus();
-      return;
-    }
     const price = selectedPlan === 'single' ? '١٩٩' : '٣٩٩';
     const count = selectedPlan === 'single' ? 'مكان واحد' : `${document.getElementById('setupPlaceCount').value} أماكن`;
     document.getElementById('setupSummary').textContent = `${count} · ${price} ر.س شهريًا بعد تجربة 14 يوم`;
@@ -222,6 +234,11 @@ document.getElementById('viewProduct').addEventListener('click', () => document.
 document.getElementById('contactForm').addEventListener('submit', async event => {
   event.preventDefault();
   const form = event.currentTarget;
+  if (!form.checkValidity()) {
+    showToast('راجع الخانات المطلوبة قبل إرسال الطلب');
+    form.reportValidity();
+    return;
+  }
   const submitButton = form.querySelector('button[type="submit"]');
   const data = normalizeLeadData(form);
   const summary = document.getElementById('leadSummary');

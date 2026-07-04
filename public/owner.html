@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linek | تجربة المالك</title>
+    <link rel="icon" href="assets/linek-mark.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="journey.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt="" /><span>لاينك</span></a>
+        <nav aria-label="تنقل تجربة المالك">
+          <a class="active" href="owner.html">تجربة المالك</a>
+          <a href="stay.html">صفحة الضيف</a>
+          <a href="payment.html">صفحة الدفع</a>
+        </nav>
+        <a class="pill ghost" href="index.html">العودة للموقع</a>
+      </header>
+
+      <section class="hero-panel">
+        <div class="panel tint">
+          <span class="eyebrow">تجربة المالك</span>
+          <h1>جهّز صفحة حجز موثقة لكل مكان</h1>
+          <p>هذه تجربة تشغيلية كاملة من جهة المالك: تضيف أكثر من مكان، تضبط السياسات والتوفر، تربط التقويمات، وتدخل رابط الدفع الخاص بك. حالة التوثيق لا يختارها المالك؛ Linek يعتمدها بعد مراجعة البيانات والإقرار.</p>
+          <div class="hero-actions">
+            <a class="pill" href="#setup">ابدأ التجهيز</a>
+            <a class="pill flat" href="stay.html">معاينة رابط الضيف</a>
+          </div>
+        </div>
+        <aside class="panel">
+          <span class="eyebrow">داشبورد المالك</span>
+          <div class="metric-grid owner-dashboard">
+            <div class="metric"><b id="dashboardRevenue">0 ر.س</b><span>دخل الحجوزات المؤكدة</span></div>
+            <div class="metric"><b id="dashboardConfirmed">0</b><span>حجز مؤكد</span></div>
+            <div class="metric"><b id="dashboardPending">0</b><span>بانتظار موافقة</span></div>
+            <div class="metric"><b id="dashboardCancelled">0</b><span>حجز ملغي</span></div>
+          </div>
+          <div class="booking-requests">
+            <div class="request-head"><b>طلبات الحجز</b><span id="bookingRequestCount">0 طلب</span></div>
+            <div class="booking-request-list" id="ownerBookingList"></div>
+          </div>
+          <div class="trust-box" style="margin-top:14px">هدف الصفحة: ضيفك يفهم لماذا يدفع لك باطمئنان قبل أن ينتقل لرابط الدفع الخاص بك.</div>
+        </aside>
+      </section>
+
+      <section class="flow-grid" id="setup">
+        <aside class="side-steps" aria-label="خطوات تجهيز المالك">
+          <button class="active" data-owner-step="1">1. الأماكن</button>
+          <button data-owner-step="2">2. تفاصيل المكان</button>
+          <button data-owner-step="3">3. السياسات والتقويم</button>
+          <button data-owner-step="4">4. التوثيق والدفع</button>
+          <button data-owner-step="5">5. المعاينة</button>
+        </aside>
+
+        <div>
+          <section class="panel step-card active" data-owner-panel="1">
+            <span class="eyebrow">الخطوة 1</span>
+            <h2 class="page-title">إدارة أماكن المالك</h2>
+            <p class="muted">إذا كان المالك مشتركاً في باقة تدعم أكثر من مكان، سيظهر كل مكان كخيار مستقل للضيف داخل نفس الرابط.</p>
+            <div class="place-manager">
+              <div class="place-list" id="ownerPlaceList"></div>
+              <button class="pill flat" id="addPlace" type="button">إضافة مكان آخر</button>
+            </div>
+            <div class="hero-actions"><button class="pill" data-next-owner-step>التالي</button></div>
+          </section>
+
+          <section class="panel step-card" data-owner-panel="2">
+            <span class="eyebrow">الخطوة 2</span>
+            <h2 class="page-title">تفاصيل المكان</h2>
+            <div class="form-grid">
+              <label class="field"><span>اسم المكان</span><input id="placeName" required minlength="3" value="شاليه سُكون" title="اكتب اسم المكان بثلاثة أحرف على الأقل" /></label>
+              <label class="field"><span>المدينة</span><input id="city" required pattern="^[\u0600-\u06FFa-zA-Z ]{2,}$" value="الرياض" title="اكتب اسم المدينة بحروف فقط" /></label>
+              <label class="field"><span>نوع المكان</span><select id="placeType" required><option>شاليه</option><option>شقة إيجار يومي</option><option>استراحة</option></select></label>
+              <label class="field"><span>نوع الإقامة</span><select id="stayType" required><option>كاملة</option><option>جزئية</option></select></label>
+              <label class="field"><span>وقت الدخول</span><input id="checkIn" required value="4:00 مساءً" title="اكتب وقت الدخول" /></label>
+              <label class="field"><span>وقت الخروج</span><input id="checkOut" required value="12:00 ظهراً" title="اكتب وقت الخروج" /></label>
+              <label class="field"><span>السعر الأساسي</span><input id="basePrice" type="number" required min="1" value="850" title="اكتب السعر الأساسي بالأرقام" /></label>
+              <label class="field"><span>واتساب المالك</span><input id="merchantWhatsapp" required inputmode="tel" pattern="^9665[0-9]{8}$" value="966501234567" title="اكتب الرقم بصيغة سعودية مثل 966501234567" /></label>
+              <label class="field"><span>العنوان الوطني المختصر</span><input id="nationalAddress" required pattern="^[A-Za-z]{4}[0-9]{4}$" maxlength="8" value="ABCD1234" title="اكتب 4 حروف إنجليزية ثم 4 أرقام، مثال ABCD1234" /></label>
+              <label class="field"><span>رابط Google Maps</span><input id="googleMapsLink" type="url" required value="https://maps.google.com/?q=Riyadh" title="ضع رابط موقع المكان من Google Maps" /></label>
+              <label class="field full"><span>صور المكان - اختياري حتى 15 صورة</span><input id="placePhotoInput" type="file" accept="image/*" multiple /></label>
+              <div class="field full">
+                <span>معاينة الصور</span>
+                <div class="photo-preview" id="photoPreview"></div>
+              </div>
+              <label class="field full"><span>سياسات أو تفاصيل إضافية من المالك</span><textarea id="extraDescription" rows="4" required minlength="20" title="اكتب تفاصيل إضافية لا تقل عن 20 حرفاً">جلسة خارجية، مسبح، ومساحات مناسبة للعائلة.</textarea></label>
+            </div>
+            <div class="auto-description">
+              <span>الوصف الذي سيراه الضيف</span>
+              <p id="autoDescription">-</p>
+            </div>
+            <div class="hero-actions"><button class="pill ghost" data-prev-owner-step>رجوع</button><button class="pill" data-next-owner-step>التالي</button></div>
+          </section>
+
+          <section class="panel step-card" data-owner-panel="3">
+            <span class="eyebrow">الخطوة 3</span>
+            <h2 class="page-title">السياسات والتقويم</h2>
+            <div class="form-grid">
+              <label class="field full"><span>سياسة الإلغاء</span><textarea id="cancelPolicy" rows="3" required minlength="15" title="اكتب سياسة الإلغاء بوضوح">استرداد كامل قبل 72 ساعة من موعد الحجز. بعد ذلك يتم التعامل مع الطلب حسب سياسة مقدم الخدمة.</textarea></label>
+              <label class="field full"><span>تعليمات مهمة للضيف</span><textarea id="rules" rows="3" required minlength="15" title="اكتب تعليمات المكان بوضوح">الحجز للعائلات فقط. يمنع تجاوز عدد الضيوف المتفق عليه. المحافظة على المكان شرط أساسي لتأكيد أي حجز لاحق.</textarea></label>
+            </div>
+            <h3>أيام متاحة للتجربة</h3>
+            <div class="check-grid" id="availabilityGrid"></div>
+            <h3>ربط التقويمات الخارجية</h3>
+            <p class="muted">ضع روابط iCal من Airbnb أو جاذر إن أو أي منصة أخرى حتى تظهر التعارضات قبل قبول الحجز.</p>
+            <div class="form-grid calendar-grid">
+              <label class="field"><span>Airbnb iCal - اختياري</span><input id="airbnbCalendar" type="url" placeholder="https://..." title="ضع رابط iCal صحيحاً أو اتركه فارغاً" /></label>
+              <label class="field"><span>جاذر إن iCal - اختياري</span><input id="gathernCalendar" type="url" placeholder="https://..." title="ضع رابط iCal صحيحاً أو اتركه فارغاً" /></label>
+              <label class="field"><span>Booking iCal - اختياري</span><input id="bookingCalendar" type="url" placeholder="https://..." title="ضع رابط iCal صحيحاً أو اتركه فارغاً" /></label>
+              <label class="field"><span>تقويم آخر - اختياري</span><input id="otherCalendar" type="url" placeholder="https://..." title="ضع رابط iCal صحيحاً أو اتركه فارغاً" /></label>
+            </div>
+            <div class="trust-box" id="calendarStatus" style="margin-top:14px">لم يتم ربط أي تقويم خارجي بعد.</div>
+            <div class="hero-actions"><button class="pill ghost" data-prev-owner-step>رجوع</button><button class="pill" data-next-owner-step>التالي</button></div>
+          </section>
+
+          <section class="panel step-card" data-owner-panel="4">
+            <span class="eyebrow">الخطوة 4</span>
+            <h2 class="page-title">التوثيق والدفع</h2>
+            <div class="locked-grid">
+              <article class="locked-card">
+                <span>حالة التوثيق</span>
+                <b id="lockedVerification">بانتظار مراجعة Linek</b>
+                <p>هذه الحالة مقيدة عند Linek ولا يحق للمالك اختيارها. الاعتماد أو الرفض يتم بعد مراجعة البيانات والإقرار.</p>
+              </article>
+              <article class="locked-card">
+                <span>وسيلة الدفع</span>
+                <b>رابط دفع من جهة المالك</b>
+                <p>مبدئياً يظهر للضيف رابط دفع يخص المالك، وLinek لا يستلم مبالغ حجوزات الضيوف.</p>
+              </article>
+            </div>
+            <div class="form-grid">
+              <label class="field"><span>صفة مقدم الخدمة</span><select id="providerRole" required><option>مالك</option><option>مشغل</option><option>مستأجر مفوض</option></select></label>
+              <label class="field"><span>الاسم القانوني/التجاري</span><input id="legalName" required minlength="3" value="شاليه سُكون للتأجير اليومي" title="اكتب الاسم القانوني أو التجاري" /></label>
+              <label class="field"><span>اسم المستفيد الظاهر للضيف</span><input id="beneficiary" required minlength="3" value="شاليه سُكون للتأجير اليومي" title="اكتب اسم المستفيد الذي يظهر للضيف" /></label>
+              <label class="field"><span>رابط الدفع الخاص بالمالك - اختياري</span><input id="ownerPaymentLink" value="https://pay.example.com/linek-demo" placeholder="ضع الرابط عند توفره" title="ضع رابط الدفع إذا كان متوفراً، أو اتركه فارغاً للتجربة" /></label>
+              <label class="field full acknowledgement">
+                <input id="legalAck" type="checkbox" required />
+                <span>أقر أنني مخول بتأجير هذا المكان، وأن بيانات المكان والتوفر والسياسات ووسيلة الدفع صحيحة، وأتحمل المسؤولية القانونية تجاه الضيف عن صحة البيانات وتنفيذ الحجز.</span>
+              </label>
+            </div>
+            <div class="warning-box" style="margin-top:14px">Linek يستخدم هذا الإقرار وبيانات المكان كجزء من قرار التوثيق أو الرفض. لا يوجد دفع إنتاجي داخل Linek في هذه التجربة.</div>
+            <div class="hero-actions"><button class="pill ghost" data-prev-owner-step>رجوع</button><button class="pill" data-next-owner-step>التالي</button></div>
+          </section>
+
+          <section class="panel step-card" data-owner-panel="5">
+            <span class="eyebrow">الخطوة 5</span>
+            <h2 class="page-title">المعاينة والنشر التجريبي</h2>
+            <div class="preview-layout">
+              <article class="place-card">
+                <img id="previewImage" src="assets/chalet-hero.png" alt="معاينة المكان" />
+                <div>
+                  <span class="badge brand-badge" id="previewVerification"><span>بانتظار مراجعة</span><span class="linek-badge-word"><img src="assets/linek-mark.svg" alt="" /><b>Linek</b></span></span>
+                  <h3 id="previewName">شاليه سُكون</h3>
+                  <p id="previewDescription">صفحة حجز موثقة تبني الثقة قبل الدفع.</p>
+                </div>
+              </article>
+              <div class="timeline">
+                <article data-step="1"><h3>رابط واحد يعرض كل الأماكن</h3><p>الضيف يختار المكان المناسب من صفحة واحدة إذا كان لدى المالك أكثر من مكان.</p></article>
+                <article data-step="2"><h3>طلب الحجز ينتظر موافقة المالك</h3><p>يبقى الطلب معلقاً لمدة 30 دقيقة فقط ثم يلغى تلقائياً في التجربة.</p></article>
+                <article data-step="3"><h3>الدفع عبر رابط المالك</h3><p>عند الموافقة، ينتقل الضيف لرابط الدفع الخاص بالمالك فقط.</p></article>
+              </div>
+            </div>
+            <div class="hero-actions">
+              <button class="pill ghost" data-prev-owner-step>رجوع</button>
+              <button class="pill" id="saveOwnerExperience">حفظ التجربة</button>
+              <a class="pill flat" href="stay.html">فتح صفحة الضيف</a>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+    <div class="toast" id="toast">تم</div>
+    <script src="owner.js"></script>
+  </body>
+</html>
