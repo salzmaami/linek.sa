@@ -186,6 +186,16 @@ const Linek = (() => {
     return rows[0] || null;
   }
 
+  async function latestVerificationRequest(ownerId) {
+    if (!ownerId) return null;
+    const rows = await db(`verification_requests?select=*&owner_id=eq.${encodeURIComponent(ownerId)}&order=created_at.desc&limit=10`);
+    return rows.find(request =>
+      request.status === 'submitted' &&
+      clean(request.national_id_file) &&
+      clean(request.selfie_file)
+    ) || null;
+  }
+
   async function requireOwner() {
     const user = await currentUser();
     if (!user) {
@@ -246,6 +256,7 @@ const Linek = (() => {
     currentUser,
     ownerProfile,
     ensureOwnerProfile,
+    latestVerificationRequest,
     requireOwner,
     uploadPrivateFile,
     formData,

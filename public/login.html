@@ -40,9 +40,19 @@
       try {
         await Linek.signIn(data.identifier, data.password);
         const profile = await Linek.ensureOwnerProfile();
-        if (!profile || profile.verification_status === 'pending') window.location.href = 'waiting-approval.html';
-        else if (profile.verification_status === 'approved') window.location.href = 'dashboard.html';
-        else window.location.href = 'verification-status.html';
+        if (!profile) {
+          window.location.href = 'verification-upload.html';
+          return;
+        }
+        if (profile.verification_status === 'approved') {
+          window.location.href = 'dashboard.html';
+          return;
+        }
+        if (profile.verification_status === 'rejected' || profile.verification_status === 'more_information_required') {
+          window.location.href = 'verification-status.html';
+          return;
+        }
+        window.location.href = 'verification-upload.html';
       } catch (error) {
         Linek.toast(error.message);
       } finally {
