@@ -302,6 +302,35 @@ textarea {
   box-shadow: 0 18px 42px rgba(62,48,120,.06);
 }
 
+.card summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.card summary::-webkit-details-marker {
+  display: none;
+}
+
+.card summary:after {
+  content: "فتح التفاصيل";
+  margin-inline-start: auto;
+  color: var(--purple);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.card[open] summary:after {
+  content: "إخفاء التفاصيل";
+}
+
+.card:not([open]) {
+  padding-bottom: 18px;
+}
+
+.card:not([open]) > :not(summary) {
+  display: none;
+}
+
 .card-head {
   display: flex;
   justify-content: space-between;

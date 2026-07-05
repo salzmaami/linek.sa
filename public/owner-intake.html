@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Linek | تجهيز بيانات المكان</title>
+  <link rel="icon" href="assets/linek-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a>
+        <span class="eyebrow">تجهيز صفحة الحجز</span>
+        <h1>كمّل بيانات مكانك قبل مراجعة Linek</h1>
+        <p>بعد الإرسال، يدخل الطلب عند Linek للمراجعة. رابط الضيف لا ينشر إلا بعد قبول البيانات والتوثيق.</p>
+      </div>
+      <div class="token-card">
+        <b id="ownerName">جاري تحميل بيانات الطلب...</b>
+        <small id="requestStatus">هذه الصفحة خاصة بصاحب الطلب فقط.</small>
+      </div>
+    </header>
+
+    <section class="panel" style="margin-top:24px">
+      <div class="panel-head">
+        <h2>بيانات المكان</h2>
+        <span>الحقول الأساسية للتجربة المغلقة</span>
+      </div>
+      <form class="fields" id="ownerIntakeForm">
+        <label><span>اسم المكان</span><input name="name" required minlength="3"></label>
+        <label><span>المدينة</span><input name="city" required minlength="2"></label>
+        <label><span>نوع المكان</span><select name="property_type" required><option>شاليه</option><option>شقة إيجار يومي</option><option>استراحة</option></select></label>
+        <label><span>السعر الأساسي لليلة</span><input name="base_price" required type="number" min="1" placeholder="850"></label>
+        <label><span>وقت الدخول</span><input name="check_in" placeholder="4:00 مساءً"></label>
+        <label><span>وقت الخروج</span><input name="check_out" placeholder="12:00 ظهراً"></label>
+        <label class="full"><span>وصف مختصر</span><textarea name="description" required minlength="20" placeholder="اكتب وصف المكان والمرافق الأساسية"></textarea></label>
+        <label class="full"><span>سياسة الإلغاء</span><textarea name="cancellation_policy" required minlength="10" placeholder="مثال: استرداد كامل قبل 72 ساعة..."></textarea></label>
+        <label class="full"><span>تعليمات المكان</span><textarea name="rules" required minlength="10" placeholder="مثال: للعائلات فقط، الالتزام بعدد الضيوف..."></textarea></label>
+        <label class="full"><span>رابط دفع المالك</span><input name="payment_link" type="url" placeholder="https://..." dir="ltr"></label>
+        <label class="full"><span>ملاحظة عن وسيلة الدفع</span><textarea name="payment_method_note" placeholder="مثال: رابط دفع خاص بالمالك، لا يدخل حساب Linek"></textarea></label>
+        <div class="actions full">
+          <button type="submit">إرسال للمراجعة</button>
+          <span id="saveStatus" style="color:var(--muted);align-self:center"></span>
+        </div>
+      </form>
+    </section>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script src="owner-intake.js"></script>
+</body>
+</html>

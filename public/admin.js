@@ -124,10 +124,35 @@ function leadBadge(status) {
 }
 
 function ownerBadge(owner) {
+  if (owner.subscription_status === 'cancelled') return '<span class="badge danger">ملغي</span>';
   if (owner.subscription_status === 'active') return '<span class="badge">مشترك</span>';
   if (owner.trial_expired) return '<span class="badge danger">انتهت التجربة</span>';
   if (owner.trial_needs_alert) return '<span class="badge warn">يحتاج تنبيه</span>';
   return '<span class="badge">تجربة فعالة</span>';
+}
+
+function propertyStatusLabel(status) {
+  const labels = {
+    draft: 'بانتظار بيانات المالك',
+    under_review: 'تحت مراجعة Linek',
+    published: 'منشور',
+    paused: 'متوقف',
+    rejected: 'مرفوض'
+  };
+  return labels[status] || status || '-';
+}
+
+function whatsappLink(phone, message) {
+  const clean = String(phone || '').replace(/[^\d]/g, '');
+  return clean ? `https://wa.me/${clean}?text=${encodeURIComponent(message)}` : '#';
+}
+
+function ownerSetupLink(property) {
+  return `${location.origin}/owner-intake.html?token=${encodeURIComponent(property.owner_setup_token || '')}`;
+}
+
+function publicStayLink(property) {
+  return `${location.origin}/stay.html?slug=${encodeURIComponent(property.slug)}`;
 }
 
 function renderLeads() {
@@ -143,30 +168,27 @@ function renderLeads() {
     const suggestedSlug = slugify(initialName || lead.name);
     const planCode = Number(lead.places || 1) > 1 ? 'multi' : 'single';
     return `
-      <article class="card" data-lead-card="${escapeHtml(lead.id)}">
-        <div class="card-head">
+      <details class="card" data-lead-card="${escapeHtml(lead.id)}">
+        <summary class="card-head">
           <div class="title">
             <b>${escapeHtml(lead.name)}</b>
             <small>${escapeHtml(lead.phone)} · ${escapeHtml(lead.city)} · ${escapeHtml(lead.property_type)} · ${lead.places || 1} مكان</small>
           </div>
           <span class="badge">${escapeHtml(leadBadge(lead.status))}</span>
-        </div>
+        </summary>
         <small>${escapeHtml(lead.message || 'لا توجد ملاحظات')}</small>
         <div class="fields">
           <label><span>اسم العقار</span><input data-field="propertyName" value="${escapeHtml(initialName || 'شاليه جديد')}"></label>
           <label><span>الرابط slug</span><input data-field="slug" value="${escapeHtml(suggestedSlug)}" dir="ltr"></label>
           <label><span>الخطة</span><select data-field="planCode"><option value="single" ${planCode === 'single' ? 'selected' : ''}>مكان واحد - 199</option><option value="multi" ${planCode === 'multi' ? 'selected' : ''}>حتى 5 أماكن - 399</option><option value="custom">عرض مخصص</option></select></label>
-          <label><span>السعر الأساسي</span><input data-field="basePrice" type="number" min="0" value="0"></label>
-          <label class="full"><span>رابط دفع المالك</span><input data-field="paymentLink" type="url" placeholder="https://..." dir="ltr"></label>
           <label class="full"><span>رابط دفع اشتراك Linek بعد 14 يوم</span><input data-field="linekSubscriptionPaymentLink" type="url" placeholder="https://..." dir="ltr"></label>
           <label class="full"><span>ملاحظة داخلية</span><textarea data-field="internalNote" placeholder="سبب القبول/ملاحظات التشغيل"></textarea></label>
-          <label><span>النشر</span><select data-field="publishNow"><option value="false">مسودة</option><option value="true">انشر الرابط الآن</option></select></label>
         </div>
         <div class="actions">
-          <button type="button" data-action="convert-lead" data-lead-id="${escapeHtml(lead.id)}">قبول وتوليد رابط</button>
+          <button type="button" data-action="convert-lead" data-lead-id="${escapeHtml(lead.id)}">قبول مبدئي وإنشاء رابط تجهيز البيانات</button>
           <button type="button" class="danger" data-action="reject-lead" data-lead-id="${escapeHtml(lead.id)}">رفض</button>
         </div>
-      </article>
+      </details>
     `;
   }).join('');
 }
@@ -196,21 +218,22 @@ function renderOwners() {
     const daysText = days === null ? '-' : days <= 0 ? 'منتهية' : `${days} يوم`;
     const whatsapp = `https://wa.me/${String(owner.phone || '').replace(/[^\d]/g, '')}?text=${trialMessage(owner)}`;
     return `
-      <article class="card" data-owner-card="${escapeHtml(owner.id)}">
-        <div class="card-head">
+      <details class="card" data-owner-card="${escapeHtml(owner.id)}">
+        <summary class="card-head">
           <div class="title">
             <b>${escapeHtml(owner.name)}</b>
             <small>${escapeHtml(owner.phone)} · نهاية التجربة: ${dateText(owner.trial_ends_at)} · المتبقي: ${daysText}</small>
           </div>
           ${ownerBadge(owner)}
-        </div>
+        </summary>
         <label><span>رابط دفع اشتراك Linek</span><input data-field="linek_subscription_payment_link" value="${escapeHtml(owner.linek_subscription_payment_link || '')}" placeholder="https://..." dir="ltr"></label>
         <div class="actions">
           <button type="button" data-action="save-owner" data-owner-id="${escapeHtml(owner.id)}">حفظ الرابط</button>
           <button type="button" data-action="mark-paid" data-owner-id="${escapeHtml(owner.id)}">تسجيل أنه دفع لنا</button>
           <a class="button-link secondary" href="${whatsapp}" target="_blank" rel="noopener" data-action="alert-owner" data-owner-id="${escapeHtml(owner.id)}">إرسال تنبيه واتساب</a>
+          <button type="button" class="danger" data-action="cancel-owner" data-owner-id="${escapeHtml(owner.id)}">إلغاء الاشتراك وإيقاف الخدمة</button>
         </div>
-      </article>
+      </details>
     `;
   }).join('');
 }
@@ -224,22 +247,28 @@ function renderProperties() {
   }
 
   list.innerHTML = properties.map(property => {
-    const publicLink = `${location.origin}/stay.html?slug=${encodeURIComponent(property.slug)}`;
+    const publicLink = publicStayLink(property);
+    const setupLink = ownerSetupLink(property);
+    const ownerPhone = property.owners?.phone || '';
+    const setupWhatsapp = whatsappLink(ownerPhone, `مرحباً، هذا رابط تجهيز بيانات مكانك في Linek:\n${setupLink}\nبعد الإرسال سنراجع البيانات ونرسل لك رابط صفحة الضيف.`);
+    const publicWhatsapp = whatsappLink(ownerPhone, `تم نشر صفحة الحجز الموثقة الخاصة بك في Linek:\n${publicLink}`);
     return `
-      <article class="card">
-        <div class="card-head">
+      <details class="card" data-property-card="${escapeHtml(property.id)}">
+        <summary class="card-head">
           <div class="title">
             <b>${escapeHtml(property.name)}</b>
             <small>${escapeHtml(property.city)} · ${escapeHtml(property.property_type)} · ${money(property.base_price)} · ${escapeHtml(property.owners?.name || '')}</small>
           </div>
-          <span class="badge">${escapeHtml(property.status)}</span>
-        </div>
-        <input value="${escapeHtml(publicLink)}" readonly dir="ltr">
+          <span class="badge">${escapeHtml(propertyStatusLabel(property.status))}</span>
+        </summary>
+        ${property.status === 'published' ? `<label><span>رابط الضيف المنشور</span><input value="${escapeHtml(publicLink)}" readonly dir="ltr"></label>` : ''}
+        ${property.owner_setup_token ? `<label><span>رابط تجهيز بيانات المالك</span><input value="${escapeHtml(setupLink)}" readonly dir="ltr"></label>` : ''}
         <div class="actions">
-          <a class="button-link" href="${publicLink}" target="_blank" rel="noopener">فتح الرابط</a>
-          <button type="button" class="secondary" data-copy="${escapeHtml(publicLink)}">نسخ الرابط</button>
+          ${property.owner_setup_token ? `<a class="button-link secondary" href="${setupWhatsapp}" target="_blank" rel="noopener">إرسال رابط التجهيز واتساب</a><button type="button" class="secondary" data-copy="${escapeHtml(setupLink)}">نسخ رابط التجهيز</button>` : ''}
+          ${property.status === 'under_review' || property.status === 'draft' ? `<button type="button" data-action="publish-property" data-property-id="${escapeHtml(property.id)}">اعتماد ونشر رابط الضيف</button>` : ''}
+          ${property.status === 'published' ? `<a class="button-link" href="${publicLink}" target="_blank" rel="noopener">فتح رابط الضيف</a><a class="button-link secondary" href="${publicWhatsapp}" target="_blank" rel="noopener">إرسال رابط الضيف واتساب</a><button type="button" class="secondary" data-copy="${escapeHtml(publicLink)}">نسخ رابط الضيف</button>` : ''}
         </div>
-      </article>
+      </details>
     `;
   }).join('');
 }
@@ -261,17 +290,17 @@ function renderBookings() {
   }
 
   list.innerHTML = bookings.map(booking => `
-    <article class="card">
-      <div class="card-head">
+    <details class="card">
+      <summary class="card-head">
         <div class="title">
           <b>${escapeHtml(booking.guest_name)} · ${escapeHtml(booking.public_code)}</b>
           <small>${escapeHtml(booking.guest_phone)} · ${escapeHtml(booking.properties?.name || '')} · ${dateText(booking.booking_date)} · ${money(booking.amount)}</small>
         </div>
         <span class="badge">${escapeHtml(booking.status)}</span>
-      </div>
+      </summary>
       <small>حالة الدفع: ${escapeHtml(booking.payment_status)}</small>
       <div class="actions">${bookingActions(booking)}</div>
-    </article>
+    </details>
   `).join('');
 }
 
@@ -330,10 +359,9 @@ document.body.addEventListener('click', async event => {
       await apiPost({
         action: 'convertLead',
         leadId: button.dataset.leadId,
-        ...fields,
-        publishNow: fields.publishNow === 'true'
+        ...fields
       });
-      showToast('تم قبول المالك وتوليد الرابط');
+      showToast('تم قبول المالك وإنشاء رابط تجهيز البيانات');
       await loadDashboard();
     }
 
@@ -362,6 +390,13 @@ document.body.addEventListener('click', async event => {
       await loadDashboard();
     }
 
+    if (button.dataset.action === 'cancel-owner') {
+      if (!confirm('تأكيد إلغاء الاشتراك وإيقاف صفحات هذا المالك؟')) return;
+      await apiPost({action: 'updateOwner', ownerId: button.dataset.ownerId, cancelSubscription: true});
+      showToast('تم إلغاء الاشتراك وإيقاف الخدمة');
+      await loadDashboard();
+    }
+
     if (button.dataset.action === 'alert-owner') {
       event.preventDefault();
       await apiPost({action: 'updateOwner', ownerId: button.dataset.ownerId, markAlerted: true});
@@ -377,6 +412,17 @@ document.body.addEventListener('click', async event => {
         payment_status: button.dataset.paymentStatus
       });
       showToast('تم تحديث طلب الحجز');
+      await loadDashboard();
+    }
+
+    if (button.dataset.action === 'publish-property') {
+      await apiPost({
+        action: 'updateProperty',
+        propertyId: button.dataset.propertyId,
+        status: 'published',
+        verification_status: 'verified_payment_reviewed'
+      });
+      showToast('تم نشر رابط الضيف');
       await loadDashboard();
     }
   } catch (error) {

@@ -1,4 +1,5 @@
 const DEFAULT_LIMIT = 80;
+const crypto = require('crypto');
 
 function json(res, status, body) {
   res.statusCode = status;
@@ -29,6 +30,10 @@ function addDays(date, days) {
   const next = new Date(date);
   next.setDate(next.getDate() + days);
   return next.toISOString();
+}
+
+function generateToken() {
+  return crypto.randomBytes(24).toString('hex');
 }
 
 function requireConfig() {
@@ -157,9 +162,10 @@ async function convertLead(config, body) {
       base_price: Number(body.basePrice || 0),
       payment_link: cleanText(body.paymentLink) || null,
       payment_method_note: cleanText(body.paymentMethodNote) || null,
-      verification_status: body.paymentLink ? 'verified_payment_reviewed' : 'verified_basic',
-      status: body.publishNow ? 'published' : 'draft',
-      published_at: body.publishNow ? now : null,
+      verification_status: 'under_review',
+      status: 'draft',
+      owner_setup_token: generateToken(),
+      published_at: null,
       internal_note: cleanText(body.internalNote) || null
     }
   });
@@ -200,6 +206,10 @@ async function updateOwner(config, body) {
     patch.linek_subscription_paid_at = new Date().toISOString();
   }
   if (body.markAlerted) patch.last_trial_alert_at = new Date().toISOString();
+  if (body.cancelSubscription) {
+    patch.status = 'paused';
+    patch.subscription_status = 'cancelled';
+  }
   patch.updated_at = new Date().toISOString();
 
   const rows = await supabase(config, `owners?id=eq.${encodeURIComponent(body.ownerId)}`, {
@@ -211,6 +221,15 @@ async function updateOwner(config, body) {
       method: 'PATCH',
       body: {
         status: 'published',
+        updated_at: new Date().toISOString()
+      }
+    });
+  }
+  if (body.cancelSubscription) {
+    await supabase(config, `properties?owner_id=eq.${encodeURIComponent(body.ownerId)}&status=in.(published,under_review,draft)`, {
+      method: 'PATCH',
+      body: {
+        status: 'paused',
         updated_at: new Date().toISOString()
       }
     });
