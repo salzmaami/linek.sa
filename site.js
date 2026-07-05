@@ -44,9 +44,11 @@ function setPlan(plan) {
 }
 
 function openSetup(plan = 'single') {
-  const target = new URL('owner-apply.html', window.location.href);
-  target.searchParams.set('plan', plan);
-  window.location.href = target.toString();
+  setPlan(plan);
+  setSetupStep(1);
+  setupModal.classList.add('open');
+  setupModal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
 }
 
 function closeSetup() {
@@ -109,21 +111,6 @@ function normalizeLeadData(form) {
     propertyType: String(data.propertyType || '').trim(),
     city: String(data.city || '').trim(),
     message: String(data.message || '').trim()
-  };
-}
-
-function normalizeSetupLeadData() {
-  const places = selectedPlan === 'single' ? 1 : Number(document.getElementById('setupPlaceCount').value || 2);
-  const placeName = document.getElementById('setupPlaceName').value.trim();
-  const planName = selectedPlan === 'single' ? 'أبي أبدأ الباقة الأساسية' : 'أبي باقة النمو حتى ٥ أماكن';
-  return {
-    name: document.getElementById('setupOwnerName').value.trim(),
-    phone: document.getElementById('setupOwnerPhone').value.trim(),
-    topic: planName,
-    places,
-    propertyType: document.getElementById('setupPlaceType').value,
-    city: document.getElementById('setupCity').value,
-    message: `طلب بداية من نافذة 14 يوم. اسم المكان: ${placeName}. لا يتم إصدار الرابط إلا بعد مراجعة Linek وقبول الطلب.`
   };
 }
 
@@ -253,35 +240,20 @@ document.querySelectorAll('[data-plan-choice]').forEach(button => button.addEven
 document.querySelectorAll('.setup-next').forEach(button => button.addEventListener('click', () => {
   if (!validateSetupStep()) return;
   if (setupStep === 2) {
-    return;
+    const name = document.getElementById('setupPlaceName');
+    const price = selectedPlan === 'single' ? '١٩٩' : '٣٩٩';
+    const count = selectedPlan === 'single' ? 'مكان واحد' : `${document.getElementById('setupPlaceCount').value} أماكن`;
+    document.getElementById('setupSummary').textContent = `${count} · ${price} ر.س شهريًا بعد تجربة 14 يوم`;
+    document.getElementById('trialUrl').textContent = `linek.sa/stay/${slugify(name.value)}`;
   }
   setSetupStep(Math.min(3, setupStep + 1));
 }));
 
-document.getElementById('submitSetupLead').addEventListener('click', async () => {
-  if (!validateSetupStep()) return;
-  const button = document.getElementById('submitSetupLead');
-  const data = normalizeSetupLeadData();
-  const price = selectedPlan === 'single' ? '١٩٩' : '٣٩٩';
-  const count = selectedPlan === 'single' ? 'مكان واحد' : `${data.places} أماكن`;
-  button.disabled = true;
-  button.textContent = 'جار حفظ الطلب...';
-  try {
-    const saveResult = await saveLead(data);
-    document.getElementById('setupSummary').textContent = `${count} · ${price} ر.س شهريًا بعد تجربة 14 يوم · ${saveResult.saved ? 'تم حفظ الطلب' : 'أرسل نسخة واتساب للتأكيد'}`;
-    showToast(saveResult.saved ? 'تم حفظ طلب البداية' : 'تم تجهيز الطلب');
-    setSetupStep(3);
-  } catch (_) {
-    document.getElementById('setupSummary').textContent = `${count} · ${price} ر.س شهريًا بعد تجربة 14 يوم · تعذر الحفظ`;
-    showToast('تعذر حفظ الطلب، استخدم نموذج التواصل');
-    setSetupStep(3);
-  } finally {
-    button.disabled = false;
-    button.textContent = 'أرسل طلب البداية ←';
-  }
-});
-
 document.querySelector('.setup-back').addEventListener('click', () => setSetupStep(1));
+document.getElementById('copyTrialLink').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(`https://${document.getElementById('trialUrl').textContent}`); } catch (_) {}
+  showToast('تم نسخ رابط الحجز');
+});
 document.getElementById('viewProduct').addEventListener('click', () => document.getElementById('product').scrollIntoView({behavior: 'smooth'}));
 document.getElementById('contactForm').addEventListener('submit', async event => {
   event.preventDefault();

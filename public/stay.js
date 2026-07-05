@@ -8,6 +8,7 @@ const toast = document.getElementById('toast');
 let places = [];
 let activePlaceId = null;
 let selectedDate = null;
+let runtimeConfigPromise = null;
 
 const fallbackPlace = {
   id: 'place-1',
@@ -80,7 +81,28 @@ function supabaseSettings() {
   };
 }
 
+async function loadRuntimeConfig() {
+  if (runtimeConfigPromise) return runtimeConfigPromise;
+  runtimeConfigPromise = (async () => {
+    const configEndpoint = String(LINEK_CONFIG.configEndpoint || '').trim();
+    if (!configEndpoint || (LINEK_CONFIG.supabaseUrl && LINEK_CONFIG.supabaseAnonKey)) return LINEK_CONFIG;
+    try {
+      const response = await fetch(configEndpoint, {headers: {Accept: 'application/json'}});
+      if (!response.ok) throw new Error('Config endpoint failed');
+      const data = await response.json();
+      LINEK_CONFIG.supabaseUrl = data.supabaseUrl || '';
+      LINEK_CONFIG.supabaseAnonKey = data.supabaseAnonKey || '';
+    } catch (_) {
+      LINEK_CONFIG.supabaseUrl = LINEK_CONFIG.supabaseUrl || '';
+      LINEK_CONFIG.supabaseAnonKey = LINEK_CONFIG.supabaseAnonKey || '';
+    }
+    return LINEK_CONFIG;
+  })();
+  return runtimeConfigPromise;
+}
+
 async function supabaseFetch(path, options = {}) {
+  await loadRuntimeConfig();
   const {url, anonKey} = supabaseSettings();
   if (!url || !anonKey) throw new Error('Supabase غير مفعّل');
   const response = await fetch(`${url}/rest/v1/${path}`, {
