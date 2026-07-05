@@ -639,6 +639,7 @@ grant usage on schema public to anon, authenticated, service_role;
 grant usage, select on sequence public.booking_reference_seq to anon, authenticated, service_role;
 grant select on public.amenities to anon, authenticated;
 grant select on public.properties, public.property_images, public.property_photos to anon;
+grant select on public.availability, public.blocked_dates to anon;
 grant insert on public.bookings, public.booking_page_visits to anon;
 grant select, insert, update, delete on
   public.users,
@@ -803,11 +804,29 @@ for all to authenticated
 using (public.owner_can_access_property(property_id) or public.current_user_is_admin())
 with check (public.owner_can_access_property(property_id) or public.current_user_is_admin());
 
+drop policy if exists "Public read published availability" on public.availability;
+create policy "Public read published availability" on public.availability
+for select to anon, authenticated
+using (
+  exists (select 1 from public.properties p where p.id = property_id and p.status in ('published', 'active'))
+  or public.owner_can_access_property(property_id)
+  or public.current_user_is_admin()
+);
+
 drop policy if exists "Owners manage blocked dates" on public.blocked_dates;
 create policy "Owners manage blocked dates" on public.blocked_dates
 for all to authenticated
 using (public.owner_can_access_property(property_id) or public.current_user_is_admin())
 with check (public.owner_can_access_property(property_id) or public.current_user_is_admin());
+
+drop policy if exists "Public read published blocked dates" on public.blocked_dates;
+create policy "Public read published blocked dates" on public.blocked_dates
+for select to anon, authenticated
+using (
+  exists (select 1 from public.properties p where p.id = property_id and p.status in ('published', 'active'))
+  or public.owner_can_access_property(property_id)
+  or public.current_user_is_admin()
+);
 
 drop policy if exists "Owners manage external calendars" on public.external_calendars;
 create policy "Owners manage external calendars" on public.external_calendars

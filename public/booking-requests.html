@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Linek | طلبات الحجز</title><link rel="stylesheet" href="app.css"></head>
+<body>
+  <main class="app-shell">
+    <header class="topbar"><a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a><nav><a href="dashboard.html">الملخص</a><a class="active" href="booking-requests.html">طلبات الحجز</a></nav><button class="button secondary" data-logout type="button">خروج</button></header>
+    <section class="dashboard-grid"><aside class="sidebar" id="sidebar"></aside><div class="stack">
+      <section class="panel"><div class="panel-head"><div><span class="eyebrow">طلبات الحجز</span><h1>قبول أو رفض الطلبات</h1></div><button class="button soft" id="expireNow" type="button">تحديث المنتهية</button></div><div class="actions"><select id="statusFilter"><option value="">كل الحالات</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="rejected">Rejected</option><option value="expired">Expired</option><option value="cancelled">Cancelled</option></select><input id="searchBox" placeholder="بحث بالضيف أو الجوال أو المرجع"></div></section>
+      <section class="panel"><div class="stack" id="bookingsList"><div class="empty">جار التحميل...</div></div></section>
+    </div></section>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script src="linek-config.js"></script><script src="linek-app.js"></script><script src="owner-tools.js"></script>
+  <script>
+    document.getElementById('sidebar').innerHTML = OwnerTools.sidebar('booking-requests.html');
+    let bookings = [];
+    function remaining(booking) {
+      if (booking.status !== 'pending') return booking.status;
+      const ms = new Date(booking.expires_at).getTime() - Date.now();
+      if (ms <= 0) return '00:00';
+      const total = Math.floor(ms / 1000);
+      return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+    }
+    async function load() {
+      const context = await OwnerTools.guard();
+      if (!context) return;
+      bookings = await OwnerTools.bookings();
+      render();
+    }
+    function render() {
+      const status = document.getElementById('statusFilter').value;
+      const search = document.getElementById('searchBox').value.trim().toLowerCase();
+      const list = bookings.filter(booking => (!status || booking.status === status) && (!search || `${booking.guest_name} ${booking.guest_mobile || booking.guest_phone} ${booking.reference || booking.public_code}`.toLowerCase().includes(search)));
+      document.getElementById('bookingsList').innerHTML = list.map(booking => `<article class="card"><div class="panel-head"><div><b>${OwnerTools.escapeHtml(booking.guest_name)} · ${OwnerTools.escapeHtml(booking.reference || booking.public_code)}</b><small>${OwnerTools.escapeHtml(booking.guest_mobile || booking.guest_phone)} · ${OwnerTools.escapeHtml(booking.properties?.title || booking.properties?.name || '')} · ${OwnerTools.dateText(booking.check_in)} إلى ${OwnerTools.dateText(booking.check_out)} · ${OwnerTools.money(booking.total_price || booking.amount)}</small></div><span class="badge ${booking.status === 'pending' ? 'warn' : booking.status === 'rejected' ? 'danger' : ''}">${booking.status}</span></div><div class="notice ${booking.status === 'pending' ? 'warn' : ''}">المتبقي: <b data-countdown="${booking.id}">${remaining(booking)}</b></div><div class="actions"><button class="button" data-action="accept" data-id="${booking.id}" ${booking.status === 'pending' ? '' : 'disabled'}>قبول</button><button class="button danger" data-action="reject" data-id="${booking.id}" ${booking.status === 'pending' ? '' : 'disabled'}>رفض</button></div></article>`).join('') || '<div class="empty">لا توجد طلبات بهذه الحالة.</div>';
+    }
+    async function updateBooking(id, status) {
+      const booking = bookings.find(item => item.id === id);
+      if (!booking || booking.status !== 'pending') return;
+      if (new Date(booking.expires_at).getTime() <= Date.now()) throw new Error('انتهت مهلة هذا الطلب');
+      await Linek.db(`bookings?id=eq.${encodeURIComponent(id)}`, {method: 'PATCH', body: {status, payment_status: status === 'confirmed' ? 'waiting_for_payment' : 'cancelled', decided_at: new Date().toISOString()}});
+      await Linek.db('booking_events', {method: 'POST', body: {booking_id: id, event_type: status === 'confirmed' ? 'Owner Accepted' : 'Owner Rejected', notes: status === 'confirmed' ? 'وافق المالك على الطلب.' : 'رفض المالك الطلب.'}});
+    }
+    document.body.addEventListener('click', async event => {
+      const button = event.target.closest('[data-action]');
+      if (!button) return;
+      Linek.setLoading(button, true);
+      try {
+        await updateBooking(button.dataset.id, button.dataset.action === 'accept' ? 'confirmed' : 'rejected');
+        Linek.toast('تم تحديث الطلب');
+        await load();
+      } catch (error) { Linek.toast(error.message); } finally { Linek.setLoading(button, false); }
+    });
+    document.getElementById('expireNow').addEventListener('click', async event => {
+      Linek.setLoading(event.currentTarget, true);
+      try {
+        const response = await fetch('/api/expire-bookings', {method: 'POST'});
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'تعذر تحديث المنتهية');
+        Linek.toast(`تم تحديث ${data.expired || 0} طلب`);
+        await load();
+      } catch (error) { Linek.toast(error.message); } finally { Linek.setLoading(event.currentTarget, false); }
+    });
+    document.getElementById('statusFilter').addEventListener('change', render);
+    document.getElementById('searchBox').addEventListener('input', render);
+    setInterval(() => document.querySelectorAll('[data-countdown]').forEach(el => { const booking = bookings.find(item => item.id === el.dataset.countdown); if (booking) el.textContent = remaining(booking); }), 1000);
+    load();
+  </script>
+</body>
+</html>

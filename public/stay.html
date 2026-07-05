@@ -87,12 +87,17 @@
         <aside class="booking-sidebar">
           <form class="panel" id="bookingForm">
             <span class="eyebrow">طلب حجز</span>
-            <h2>اختر اليوم المناسب</h2>
-            <div class="date-grid" id="guestDates"></div>
-            <label class="field"><span>اسم الضيف</span><input id="guestName" required minlength="2" pattern="^[\u0600-\u06FFa-zA-Z ]{2,}$" placeholder="مثال: سلطان العتيبي" title="اكتب الاسم بحروف فقط، حرفين على الأقل" /></label>
-            <label class="field"><span>رقم الجوال</span><input id="guestPhone" required inputmode="tel" pattern="^05[0-9]{8}$" placeholder="05xxxxxxxx" title="اكتب رقم جوال سعودي يبدأ بـ 05 ويتكون من 10 أرقام" /></label>
+            <h2>اختر التواريخ</h2>
+            <label class="field"><span>تاريخ الدخول</span><input id="checkIn" name="check_in" type="date" required /></label>
+            <label class="field"><span>تاريخ الخروج</span><input id="checkOut" name="check_out" type="date" required /></label>
+            <label class="field"><span>عدد الضيوف</span><input id="guestCount" name="guests_count" type="number" min="1" value="1" required /></label>
+            <label class="field"><span>اسم الضيف</span><input id="guestName" name="guest_name" required minlength="2" pattern="^[\u0600-\u06FFa-zA-Z ]{2,}$" placeholder="مثال: سلطان العتيبي" title="اكتب الاسم بحروف فقط، حرفين على الأقل" /></label>
+            <label class="field"><span>رقم الجوال</span><input id="guestPhone" name="guest_mobile" required inputmode="tel" pattern="^05[0-9]{8}$" placeholder="05xxxxxxxx" title="اكتب رقم جوال سعودي يبدأ بـ 05 ويتكون من 10 أرقام" /></label>
+            <label class="field"><span>ملاحظات اختيارية</span><textarea id="guestNotes" name="notes" placeholder="أي طلب خاص أو وقت وصول متوقع"></textarea></label>
             <div class="summary-row"><span>السعر</span><b id="selectedPrice">-</b></div>
             <div class="summary-row"><span>الحالة التالية</span><b>بانتظار موافقة المالك</b></div>
+            <div class="notice" id="bookingReview">اختر التواريخ لعرض ملخص الطلب.</div>
+            <div class="notice success" id="calendarFreshness">التقويم قيد التحميل.</div>
             <div class="warning-box">يبقى الطلب بانتظار موافقة المالك لمدة 30 دقيقة. إذا لم يتم قبوله أو إكماله، يلغى حتى لا يبقى معلقاً.</div>
             <button class="pill" type="submit">إرسال طلب الحجز</button>
           </form>
@@ -101,6 +106,7 @@
     </main>
     <div class="toast" id="toast">تم</div>
     <script src="linek-config.js"></script>
-    <script src="stay.js"></script>
+    <script src="linek-app.js"></script>
+    <script src="booking-page.js"></script>
   </body>
 </html>
