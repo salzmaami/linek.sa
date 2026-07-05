@@ -12,9 +12,17 @@ function setForm(property) {
   document.getElementById('ownerName').textContent = property.owners?.name
     ? `مرحباً ${property.owners.name}`
     : 'مرحباً';
-  document.getElementById('requestStatus').textContent = property.status === 'under_review'
-    ? 'تم إرسال بياناتك للمراجعة. نراجعها ثم نرسل رابط الضيف بعد القبول.'
-    : 'كمّل البيانات ثم أرسلها للمراجعة.';
+  const isPublished = property.status === 'published';
+  document.getElementById('requestStatus').textContent = isPublished
+    ? 'تم اعتماد مكانك ونشر صفحة الضيف.'
+    : 'طلبك تحت مراجعة Linek. رابط الضيف يظهر بعد اعتماد التوثيق.';
+  const publicLink = `${location.origin}/stay.html?slug=${encodeURIComponent(property.slug)}`;
+  const linkPanel = document.getElementById('ownerConsoleLinks');
+  linkPanel.hidden = !isPublished;
+  if (isPublished) {
+    document.getElementById('publicGuestLink').value = publicLink;
+    document.getElementById('openGuestLink').href = publicLink;
+  }
   Object.entries({
     name: property.name,
     city: property.city,
@@ -22,6 +30,7 @@ function setForm(property) {
     base_price: property.base_price,
     check_in: property.check_in,
     check_out: property.check_out,
+    map_link: property.map_link,
     description: property.description,
     cancellation_policy: property.cancellation_policy,
     rules: property.rules,
@@ -71,6 +80,12 @@ form.addEventListener('submit', async event => {
     document.getElementById('saveStatus').textContent = '';
     showToast(error.message);
   }
+});
+
+document.getElementById('copyGuestLink').addEventListener('click', async () => {
+  const value = document.getElementById('publicGuestLink').value;
+  try { await navigator.clipboard.writeText(value); } catch (_) {}
+  showToast('تم نسخ رابط الضيف');
 });
 
 loadProperty();

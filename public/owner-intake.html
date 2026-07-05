@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Linek | تجهيز بيانات المكان</title>
+  <title>Linek | لوحة تحكم المالك</title>
   <link rel="icon" href="assets/linek-mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="admin.css">
 </head>
@@ -12,9 +12,9 @@
     <header class="hero">
       <div>
         <a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a>
-        <span class="eyebrow">تجهيز صفحة الحجز</span>
-        <h1>كمّل بيانات مكانك قبل مراجعة Linek</h1>
-        <p>بعد الإرسال، يدخل الطلب عند Linek للمراجعة. رابط الضيف لا ينشر إلا بعد قبول البيانات والتوثيق.</p>
+        <span class="eyebrow">لوحة المالك</span>
+        <h1>راجع صفحة مكانك وتحكم ببياناتها</h1>
+        <p>هذه الصفحة ترسلها Linek بعد قبول التوثيق. منها تراجع رابط الضيف وتحدّث بيانات المكان عند الحاجة.</p>
       </div>
       <div class="token-card">
         <b id="ownerName">جاري تحميل بيانات الطلب...</b>
@@ -22,10 +22,22 @@
       </div>
     </header>
 
+    <section class="panel" id="ownerConsoleLinks" style="margin-top:24px" hidden>
+      <div class="panel-head">
+        <h2>روابطك في Linek</h2>
+        <span>تظهر بعد اعتماد التوثيق ونشر صفحة الضيف</span>
+      </div>
+      <label><span>رابط صفحة الضيف</span><input id="publicGuestLink" readonly dir="ltr"></label>
+      <div class="actions" style="margin-top:14px">
+        <a class="button-link" id="openGuestLink" href="#" target="_blank" rel="noopener">فتح صفحة الضيف</a>
+        <button type="button" class="secondary" id="copyGuestLink">نسخ الرابط</button>
+      </div>
+    </section>
+
     <section class="panel" style="margin-top:24px">
       <div class="panel-head">
         <h2>بيانات المكان</h2>
-        <span>الحقول الأساسية للتجربة المغلقة</span>
+        <span>أي تعديل قد يحتاج مراجعة من Linek إذا غيّر بيانات التوثيق أو الدفع</span>
       </div>
       <form class="fields" id="ownerIntakeForm">
         <label><span>اسم المكان</span><input name="name" required minlength="3"></label>
@@ -34,6 +46,7 @@
         <label><span>السعر الأساسي لليلة</span><input name="base_price" required type="number" min="1" placeholder="850"></label>
         <label><span>وقت الدخول</span><input name="check_in" placeholder="4:00 مساءً"></label>
         <label><span>وقت الخروج</span><input name="check_out" placeholder="12:00 ظهراً"></label>
+        <label class="full"><span>رابط الموقع على الخرائط</span><input name="map_link" type="url" placeholder="https://maps.google.com/..." dir="ltr"></label>
         <label class="full"><span>وصف مختصر</span><textarea name="description" required minlength="20" placeholder="اكتب وصف المكان والمرافق الأساسية"></textarea></label>
         <label class="full"><span>سياسة الإلغاء</span><textarea name="cancellation_policy" required minlength="10" placeholder="مثال: استرداد كامل قبل 72 ساعة..."></textarea></label>
         <label class="full"><span>تعليمات المكان</span><textarea name="rules" required minlength="10" placeholder="مثال: للعائلات فقط، الالتزام بعدد الضيوف..."></textarea></label>

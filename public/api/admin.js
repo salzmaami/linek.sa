@@ -106,7 +106,7 @@ async function getDashboard(config) {
   const [leads, owners, properties, bookings] = await Promise.all([
     supabase(config, `leads?select=*&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
     supabase(config, `owners?select=*&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
-    supabase(config, `properties?select=*,owners(name,phone,subscription_status,trial_ends_at,linek_subscription_payment_link)&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
+    supabase(config, `properties?select=*,owners(name,phone,subscription_status,trial_ends_at,linek_subscription_payment_link),property_photos(url,sort_order,is_cover)&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
     supabase(config, `bookings?select=*,properties(name,slug,owner_id,owners(name,phone))&order=created_at.desc&limit=${DEFAULT_LIMIT}`)
   ]);
 
@@ -243,13 +243,61 @@ async function updateProperty(config, body) {
     if (Object.prototype.hasOwnProperty.call(body, key)) patch[key] = body[key] || null;
   });
   if (Object.prototype.hasOwnProperty.call(body, 'base_price')) patch.base_price = Number(body.base_price || 0);
-  if (body.status === 'published') patch.published_at = new Date().toISOString();
+  const now = new Date().toISOString();
+  if (body.status === 'published') patch.published_at = now;
 
   const rows = await supabase(config, `properties?id=eq.${encodeURIComponent(body.propertyId)}`, {
     method: 'PATCH',
     body: patch
   });
-  return rows[0];
+  const property = rows[0];
+
+  if (body.status === 'published' && property?.owner_id) {
+    await supabase(config, `owners?id=eq.${encodeURIComponent(property.owner_id)}`, {
+      method: 'PATCH',
+      body: {
+        status: 'active',
+        subscription_status: 'trial',
+        trial_started_at: now,
+        trial_ends_at: addDays(now, 14),
+        updated_at: now
+      }
+    });
+    await supabase(config, 'verification_reviews', {
+      method: 'POST',
+      body: {
+        property_id: property.id,
+        status: 'approved_payment_reviewed',
+        provider_checked: true,
+        payment_method_checked: true,
+        reviewer_note: cleanText(body.internal_note) || 'تم اعتماد الطلب من لوحة Linek.',
+        reviewed_at: now
+      }
+    });
+  }
+
+  if (body.status === 'rejected' && property?.owner_id) {
+    await supabase(config, `owners?id=eq.${encodeURIComponent(property.owner_id)}`, {
+      method: 'PATCH',
+      body: {
+        status: 'rejected',
+        updated_at: now
+      }
+    });
+    await supabase(config, 'verification_reviews', {
+      method: 'POST',
+      body: {
+        property_id: property.id,
+        status: 'rejected',
+        provider_checked: false,
+        payment_method_checked: false,
+        reviewer_note: cleanText(body.internal_note) || 'تم رفض الطلب من لوحة Linek.',
+        reviewed_at: now
+      }
+    });
+  }
+
+  return property;
 }
 
 async function updateBooking(config, body) {

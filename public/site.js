@@ -43,11 +43,9 @@ function setPlan(plan) {
 }
 
 function openSetup(plan = 'single') {
-  setPlan(plan);
-  setSetupStep(1);
-  setupModal.classList.add('open');
-  setupModal.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
+  const target = new URL('owner-apply.html', window.location.href);
+  target.searchParams.set('plan', plan);
+  window.location.href = target.toString();
 }
 
 function closeSetup() {

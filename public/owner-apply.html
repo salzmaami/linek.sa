@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Linek | انضم كتجربة مجانية</title>
+  <link rel="icon" href="assets/linek-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a>
+        <span class="eyebrow">تجربة 14 يوم</span>
+        <h1>جهّز طلب انضمامك لصفحة حجز موثقة</h1>
+        <p>عبّئ بيانات المالك والمكان ووسيلة الدفع والسياسات. بعد الإرسال، يدخل طلبك لمراجعة Linek ولا يظهر رابط الضيف إلا بعد قبول التوثيق.</p>
+      </div>
+      <div class="token-card">
+        <b>مسار الإطلاق التجريبي</b>
+        <small>إرسال الطلب لا يعني النشر. نراجع مقدم الخدمة ووسيلة استلام المدفوعات وفق معايير Linek، ثم نرسل لك رابط التحكم عند القبول.</small>
+      </div>
+    </header>
+
+    <section class="panel" style="margin-top:24px">
+      <div class="panel-head">
+        <h2>بيانات المالك والمكان</h2>
+        <span>املأها مرة واحدة، ونراجعها داخلياً قبل النشر</span>
+      </div>
+      <form class="fields" id="ownerApplyForm">
+        <label><span>اسم المالك / مقدم الخدمة</span><input name="owner_name" required minlength="2" placeholder="الاسم الكريم"></label>
+        <label><span>رقم الجوال</span><input name="owner_phone" required inputmode="tel" pattern="^05[0-9]{8}$" placeholder="05xxxxxxxx" title="اكتب رقم جوال سعودي يبدأ بـ 05 ويتكون من 10 أرقام"></label>
+        <label><span>الباقة المطلوبة</span><select name="plan_code" id="planCode" required><option value="single">الأساسية - 199 ر.س بعد التجربة</option><option value="multi">النمو حتى 5 أماكن - 399 ر.س بعد التجربة</option><option value="custom">أكثر من 5 أماكن - تواصل معنا</option></select></label>
+        <label><span>اسم المكان</span><input name="property_name" required minlength="3" placeholder="مثال: شاليه سُكون"></label>
+        <label><span>نوع المكان</span><select name="property_type" required><option>شاليه</option><option>شقة إيجار يومي</option><option>استراحة</option></select></label>
+        <label><span>المدينة</span><input name="city" required minlength="2" placeholder="الرياض"></label>
+        <label><span>السعر الأساسي لليلة</span><input name="base_price" required type="number" min="1" placeholder="850"></label>
+        <label><span>عدد الأماكن</span><input name="place_count" required type="number" min="1" max="20" value="1"></label>
+        <label><span>وقت الدخول</span><input name="check_in" placeholder="4:00 مساءً"></label>
+        <label><span>وقت الخروج</span><input name="check_out" placeholder="12:00 ظهراً"></label>
+        <label class="full"><span>رابط الموقع على الخرائط</span><input name="map_link" type="url" placeholder="https://maps.google.com/..." dir="ltr"></label>
+        <label class="full"><span>وصف المكان</span><textarea name="description" required minlength="20" placeholder="اكتب وصف المكان والمرافق الأساسية"></textarea></label>
+        <label class="full"><span>روابط الصور المؤقتة</span><textarea name="photo_urls" placeholder="ضع كل رابط صورة في سطر مستقل. رفع الملفات المباشر نضيفه لاحقاً."></textarea></label>
+        <label class="full"><span>سياسة الإلغاء</span><textarea name="cancellation_policy" required minlength="10" placeholder="مثال: استرداد كامل قبل 72 ساعة..."></textarea></label>
+        <label class="full"><span>تعليمات المكان</span><textarea name="rules" required minlength="10" placeholder="مثال: للعائلات فقط، الالتزام بعدد الضيوف..."></textarea></label>
+        <label class="full"><span>رابط دفع المالك للحجوزات</span><input name="payment_link" type="url" placeholder="https://..." dir="ltr"></label>
+        <label class="full"><span>ملاحظة عن وسيلة الدفع</span><textarea name="payment_method_note" placeholder="مثال: رابط دفع صادر باسم المالك. مبالغ الحجز لا تدخل حساب Linek."></textarea></label>
+        <label class="full"><span>إقرار المالك</span><textarea name="owner_declaration" required minlength="20" placeholder="أقر أن البيانات صحيحة، وأن رابط الدفع يخصني/يخص منشأتي، وأنني مسؤول عن صحة التوفر والتعامل مع الضيف."></textarea></label>
+        <label class="full" style="display:flex;gap:10px;align-items:flex-start">
+          <input name="verification_ack" type="checkbox" required style="width:auto;margin-top:7px">
+          <span>أفهم أن Linek ستراجع الطلب وفق معاييرها، وأنه لا يتم نشر رابط الضيف إلا بعد القبول، وأن Linek لا تستلم مبالغ حجوزات الضيوف في نموذج البداية.</span>
+        </label>
+        <div class="actions full">
+          <button type="submit" id="submitOwnerApply">إرسال الطلب للمراجعة</button>
+          <span id="applyStatus" style="color:var(--muted);align-self:center"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" id="applyResult" style="margin-top:24px" hidden>
+      <div class="panel-head">
+        <h2>وصل طلبك</h2>
+        <span>الخطوة التالية من فريق Linek</span>
+      </div>
+      <p>طلبك الآن تحت مراجعة Linek. لن يظهر رابط الضيف الآن. إذا تم قبول التوثيق، نرسل لك رابط التحكم الخاص بالمالك، ومنه تراجع صفحة الضيف وتشاركها.</p>
+      <a class="button-link secondary" href="index.html">العودة للموقع</a>
+    </section>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script src="owner-apply.js"></script>
+</body>
+</html>

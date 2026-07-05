@@ -105,7 +105,7 @@ function setMetrics() {
   const bookings = state.data.bookings || [];
   const alerts = owners.filter(owner => owner.trial_needs_alert || owner.trial_expired).length;
   document.getElementById('metricLeads').textContent = leads.filter(lead => ['new', 'contacted', 'qualified'].includes(lead.status)).length;
-  document.getElementById('metricOwners').textContent = owners.filter(owner => owner.subscription_status === 'trial').length;
+  document.getElementById('metricOwners').textContent = owners.filter(owner => owner.subscription_status === 'trial' && owner.status === 'active').length;
   document.getElementById('metricAlerts').textContent = alerts;
   document.getElementById('metricBookings').textContent = bookings.length;
 }
@@ -124,6 +124,8 @@ function leadBadge(status) {
 }
 
 function ownerBadge(owner) {
+  if (owner.status === 'paused' && owner.subscription_status === 'trial') return '<span class="badge warn">بانتظار اعتماد</span>';
+  if (owner.status === 'rejected') return '<span class="badge danger">مرفوض</span>';
   if (owner.subscription_status === 'cancelled') return '<span class="badge danger">ملغي</span>';
   if (owner.subscription_status === 'active') return '<span class="badge">مشترك</span>';
   if (owner.trial_expired) return '<span class="badge danger">انتهت التجربة</span>';
@@ -164,9 +166,9 @@ function renderLeads() {
   }
 
   list.innerHTML = leads.map(lead => {
-    const initialName = `${lead.property_type || 'مكان'} ${lead.city || ''}`.trim();
-    const suggestedSlug = slugify(initialName || lead.name);
     const planCode = Number(lead.places || 1) > 1 ? 'multi' : 'single';
+    const applyLink = `${location.origin}/owner-apply.html?plan=${encodeURIComponent(planCode)}`;
+    const applyWhatsapp = whatsappLink(lead.phone, `مرحباً ${lead.name || ''}،\nهذا رابط إكمال طلب الانضمام إلى تجربة Linek:\n${applyLink}\nبعد تعبئة بيانات المالك والمكان ووسيلة الدفع، يدخل الطلب لمراجعة Linek قبل نشر رابط الضيف.`);
     return `
       <details class="card" data-lead-card="${escapeHtml(lead.id)}">
         <summary class="card-head">
@@ -177,15 +179,10 @@ function renderLeads() {
           <span class="badge">${escapeHtml(leadBadge(lead.status))}</span>
         </summary>
         <small>${escapeHtml(lead.message || 'لا توجد ملاحظات')}</small>
-        <div class="fields">
-          <label><span>اسم العقار</span><input data-field="propertyName" value="${escapeHtml(initialName || 'شاليه جديد')}"></label>
-          <label><span>الرابط slug</span><input data-field="slug" value="${escapeHtml(suggestedSlug)}" dir="ltr"></label>
-          <label><span>الخطة</span><select data-field="planCode"><option value="single" ${planCode === 'single' ? 'selected' : ''}>مكان واحد - 199</option><option value="multi" ${planCode === 'multi' ? 'selected' : ''}>حتى 5 أماكن - 399</option><option value="custom">عرض مخصص</option></select></label>
-          <label class="full"><span>رابط دفع اشتراك Linek بعد 14 يوم</span><input data-field="linekSubscriptionPaymentLink" type="url" placeholder="https://..." dir="ltr"></label>
-          <label class="full"><span>ملاحظة داخلية</span><textarea data-field="internalNote" placeholder="سبب القبول/ملاحظات التشغيل"></textarea></label>
-        </div>
+        <small>هذا طلب تواصل مختصر فقط. مسار الانضمام الصحيح يبدأ من صفحة المالك الكاملة ثم يظهر في طلبات التوثيق.</small>
         <div class="actions">
-          <button type="button" data-action="convert-lead" data-lead-id="${escapeHtml(lead.id)}">قبول مبدئي وإنشاء رابط تجهيز البيانات</button>
+          <a class="button-link secondary" href="${applyWhatsapp}" target="_blank" rel="noopener">إرسال رابط الانضمام واتساب</a>
+          <button type="button" class="secondary" data-copy="${escapeHtml(applyLink)}">نسخ رابط الانضمام</button>
           <button type="button" class="danger" data-action="reject-lead" data-lead-id="${escapeHtml(lead.id)}">رفض</button>
         </div>
       </details>
@@ -242,30 +239,46 @@ function renderProperties() {
   const list = document.getElementById('propertiesList');
   const properties = state.data.properties || [];
   if (!properties.length) {
-    list.innerHTML = '<div class="empty">لا توجد عقارات منشأة بعد.</div>';
+    list.innerHTML = '<div class="empty">لا توجد طلبات توثيق أو عقارات منشورة بعد.</div>';
     return;
   }
 
   list.innerHTML = properties.map(property => {
     const publicLink = publicStayLink(property);
-    const setupLink = ownerSetupLink(property);
+    const consoleLink = ownerSetupLink(property);
     const ownerPhone = property.owners?.phone || '';
-    const setupWhatsapp = whatsappLink(ownerPhone, `مرحباً، هذا رابط تجهيز بيانات مكانك في Linek:\n${setupLink}\nبعد الإرسال سنراجع البيانات ونرسل لك رابط صفحة الضيف.`);
+    const consoleWhatsapp = whatsappLink(ownerPhone, `مرحباً، تم قبول توثيق مكانك في Linek.\nهذا رابط التحكم الخاص بك:\n${consoleLink}\nومن داخله تقدر تراجع رابط صفحة الضيف وتشاركه.`);
     const publicWhatsapp = whatsappLink(ownerPhone, `تم نشر صفحة الحجز الموثقة الخاصة بك في Linek:\n${publicLink}`);
+    const photos = (property.property_photos || [])
+      .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
+      .map(photo => photo.url)
+      .filter(Boolean);
     return `
       <details class="card" data-property-card="${escapeHtml(property.id)}">
         <summary class="card-head">
           <div class="title">
             <b>${escapeHtml(property.name)}</b>
-            <small>${escapeHtml(property.city)} · ${escapeHtml(property.property_type)} · ${money(property.base_price)} · ${escapeHtml(property.owners?.name || '')}</small>
+            <small>${escapeHtml(property.city)} · ${escapeHtml(property.property_type)} · ${money(property.base_price)} · ${escapeHtml(property.owners?.name || '')} · ${dateText(property.owner_setup_submitted_at || property.created_at)}</small>
           </div>
           <span class="badge">${escapeHtml(propertyStatusLabel(property.status))}</span>
         </summary>
+        <div class="fields">
+          <label><span>الحالة</span><input value="${escapeHtml(propertyStatusLabel(property.status))}" readonly></label>
+          <label><span>حالة التوثيق</span><input value="${escapeHtml(property.verification_status || '-')}" readonly dir="ltr"></label>
+          <label><span>رابط دفع المالك</span><input value="${escapeHtml(property.payment_link || 'لم يضاف')}" readonly dir="ltr"></label>
+          <label><span>وقت الدخول / الخروج</span><input value="${escapeHtml(`${property.check_in || '-'} / ${property.check_out || '-'}`)}" readonly></label>
+          <label class="full"><span>رابط الموقع على الخرائط</span><input value="${escapeHtml(property.map_link || 'لم يضاف')}" readonly dir="ltr"></label>
+          <label class="full"><span>الوصف</span><textarea readonly>${escapeHtml(property.description || '-')}</textarea></label>
+          <label class="full"><span>سياسة الإلغاء</span><textarea readonly>${escapeHtml(property.cancellation_policy || '-')}</textarea></label>
+          <label class="full"><span>تعليمات المكان</span><textarea readonly>${escapeHtml(property.rules || '-')}</textarea></label>
+          <label class="full"><span>ملاحظة الدفع</span><textarea readonly>${escapeHtml(property.payment_method_note || '-')}</textarea></label>
+          ${photos.length ? `<label class="full"><span>روابط الصور</span><textarea readonly dir="ltr">${escapeHtml(photos.join('\n'))}</textarea></label>` : ''}
+        </div>
         ${property.status === 'published' ? `<label><span>رابط الضيف المنشور</span><input value="${escapeHtml(publicLink)}" readonly dir="ltr"></label>` : ''}
-        ${property.owner_setup_token ? `<label><span>رابط تجهيز بيانات المالك</span><input value="${escapeHtml(setupLink)}" readonly dir="ltr"></label>` : ''}
+        ${property.status === 'published' && property.owner_setup_token ? `<label><span>رابط تحكم المالك</span><input value="${escapeHtml(consoleLink)}" readonly dir="ltr"></label>` : ''}
         <div class="actions">
-          ${property.owner_setup_token ? `<a class="button-link secondary" href="${setupWhatsapp}" target="_blank" rel="noopener">إرسال رابط التجهيز واتساب</a><button type="button" class="secondary" data-copy="${escapeHtml(setupLink)}">نسخ رابط التجهيز</button>` : ''}
-          ${property.status === 'under_review' || property.status === 'draft' ? `<button type="button" data-action="publish-property" data-property-id="${escapeHtml(property.id)}">اعتماد ونشر رابط الضيف</button>` : ''}
+          ${property.status === 'under_review' || property.status === 'draft' ? `<button type="button" data-action="publish-property" data-property-id="${escapeHtml(property.id)}">اعتماد التوثيق ونشر رابط الضيف</button><button type="button" class="danger" data-action="reject-property" data-property-id="${escapeHtml(property.id)}">رفض الطلب</button>` : ''}
+          ${property.status === 'published' && property.owner_setup_token ? `<a class="button-link secondary" href="${consoleWhatsapp}" target="_blank" rel="noopener">إرسال رابط التحكم واتساب</a><button type="button" class="secondary" data-copy="${escapeHtml(consoleLink)}">نسخ رابط التحكم</button>` : ''}
           ${property.status === 'published' ? `<a class="button-link" href="${publicLink}" target="_blank" rel="noopener">فتح رابط الضيف</a><a class="button-link secondary" href="${publicWhatsapp}" target="_blank" rel="noopener">إرسال رابط الضيف واتساب</a><button type="button" class="secondary" data-copy="${escapeHtml(publicLink)}">نسخ رابط الضيف</button>` : ''}
         </div>
       </details>
@@ -361,7 +374,7 @@ document.body.addEventListener('click', async event => {
         leadId: button.dataset.leadId,
         ...fields
       });
-      showToast('تم قبول المالك وإنشاء رابط تجهيز البيانات');
+      showToast('تم إنشاء ملف مالك يدوي');
       await loadDashboard();
     }
 
@@ -422,7 +435,20 @@ document.body.addEventListener('click', async event => {
         status: 'published',
         verification_status: 'verified_payment_reviewed'
       });
-      showToast('تم نشر رابط الضيف');
+      showToast('تم اعتماد الطلب ونشر رابط الضيف');
+      await loadDashboard();
+    }
+
+    if (button.dataset.action === 'reject-property') {
+      const reason = prompt('سبب رفض طلب التوثيق؟') || 'لم يتم قبول الطلب وفق معايير Linek الحالية';
+      await apiPost({
+        action: 'updateProperty',
+        propertyId: button.dataset.propertyId,
+        status: 'rejected',
+        verification_status: 'rejected',
+        internal_note: reason
+      });
+      showToast('تم رفض طلب التوثيق');
       await loadDashboard();
     }
   } catch (error) {

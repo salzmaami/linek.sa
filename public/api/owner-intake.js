@@ -59,7 +59,7 @@ async function getProperty(config, token) {
     `properties?select=*,owners(name,phone)&owner_setup_token=eq.${encodeURIComponent(token)}&limit=1`
   );
   if (!rows.length) {
-    const error = new Error('رابط تجهيز البيانات غير صحيح أو منتهي');
+    const error = new Error('رابط تحكم المالك غير صحيح أو منتهي');
     error.status = 404;
     throw error;
   }
@@ -78,8 +78,9 @@ async function handler(req, res) {
 
     if (req.method !== 'POST') return json(res, 405, {error: 'Method not allowed'});
 
-    await getProperty(config, token);
+    const currentProperty = await getProperty(config, token);
     const body = await readBody(req);
+    const shouldKeepPublished = currentProperty.status === 'published';
     const patch = {
       name: cleanText(body.name),
       city: cleanText(body.city),
@@ -88,12 +89,13 @@ async function handler(req, res) {
       base_price: Number(body.base_price || 0),
       check_in: cleanText(body.check_in) || null,
       check_out: cleanText(body.check_out) || null,
+      map_link: cleanText(body.map_link) || null,
       rules: cleanText(body.rules) || null,
       cancellation_policy: cleanText(body.cancellation_policy) || null,
       payment_link: cleanText(body.payment_link) || null,
       payment_method_note: cleanText(body.payment_method_note) || null,
-      status: 'under_review',
-      verification_status: 'under_review',
+      status: shouldKeepPublished ? 'published' : 'under_review',
+      verification_status: shouldKeepPublished ? currentProperty.verification_status : 'under_review',
       owner_setup_submitted_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };

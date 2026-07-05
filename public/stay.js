@@ -117,6 +117,7 @@ function normalizeDbProperty(row) {
     basePrice: row.base_price,
     checkIn: row.check_in || '4:00 مساءً',
     checkOut: row.check_out || '12:00 ظهراً',
+    googleMapsLink: row.map_link || fallbackPlace.googleMapsLink,
     photos,
     description: row.description,
     cancelPolicy: row.cancellation_policy || fallbackPlace.cancelPolicy,
