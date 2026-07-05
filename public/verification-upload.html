@@ -38,7 +38,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const user = await Linek.requireOwner();
       if (!user) return;
-      const profile = await Linek.ownerProfile();
+      const profile = await Linek.ensureOwnerProfile();
       if (profile?.whatsapp_number) document.querySelector('[name="whatsapp_number"]').value = profile.whatsapp_number;
     });
     document.getElementById('verificationForm').addEventListener('submit', async event => {
@@ -48,7 +48,7 @@
       const button = form.querySelector('button[type="submit"]');
       Linek.setLoading(button, true, 'جار رفع الملفات...');
       try {
-        const profile = await Linek.ownerProfile();
+        const profile = await Linek.ensureOwnerProfile();
         if (!profile) throw new Error('لم يتم العثور على ملف المالك');
         const national = await Linek.uploadPrivateFile(form.elements.national_id_file.files[0], `owner-${profile.id}`);
         const selfie = await Linek.uploadPrivateFile(form.elements.selfie_file.files[0], `owner-${profile.id}`);

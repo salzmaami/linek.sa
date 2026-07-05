@@ -28,7 +28,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const user = await Linek.requireOwner();
       if (!user) return;
-      const profile = await Linek.ownerProfile();
+      const profile = await Linek.ensureOwnerProfile();
       const state = document.getElementById('approvalState');
       if (profile?.verification_status === 'approved') {
         state.className = 'notice success';

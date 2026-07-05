@@ -26,7 +26,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const user = await Linek.requireOwner();
       if (!user) return;
-      const profile = await Linek.ownerProfile();
+      const profile = await Linek.ensureOwnerProfile();
       const status = profile?.verification_status || 'pending';
       const item = labels[status] || labels.pending;
       document.getElementById('statusTitle').textContent = item[0];

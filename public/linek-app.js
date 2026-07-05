@@ -157,6 +157,35 @@ const Linek = (() => {
     return rows[0] || null;
   }
 
+  async function ensureOwnerProfile() {
+    const user = await currentUser();
+    if (!user) return null;
+    const existing = await ownerProfile();
+    if (existing) return existing;
+    const metadata = user.user_metadata || {};
+    const fullName = clean(metadata.full_name) || clean(user.email).split('@')[0] || 'مالك Linek';
+    const mobile = clean(metadata.mobile || user.phone) || '0500000000';
+    const city = clean(metadata.city) || 'غير محدد';
+    await db('users', {
+      method: 'POST',
+      body: {id: user.id, email: user.email || null, mobile, role: 'owner'},
+      headers: {'Prefer': 'resolution=merge-duplicates,return=representation'}
+    });
+    const rows = await db('owner_profiles', {
+      method: 'POST',
+      body: {
+        user_id: user.id,
+        full_name: fullName,
+        business_name: clean(metadata.business_name) || null,
+        city,
+        whatsapp_number: mobile,
+        verification_status: 'pending'
+      },
+      headers: {'Prefer': 'resolution=merge-duplicates,return=representation'}
+    });
+    return rows[0] || null;
+  }
+
   async function requireOwner() {
     const user = await currentUser();
     if (!user) {
@@ -216,6 +245,7 @@ const Linek = (() => {
     clearSession,
     currentUser,
     ownerProfile,
+    ensureOwnerProfile,
     requireOwner,
     uploadPrivateFile,
     formData,

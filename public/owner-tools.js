@@ -61,7 +61,7 @@ const OwnerTools = (() => {
   async function guard() {
     const user = await Linek.requireOwner();
     if (!user) return null;
-    const profile = await Linek.ownerProfile();
+    const profile = await Linek.ensureOwnerProfile();
     if (!profile || profile.verification_status !== 'approved') {
       window.location.href = profile?.verification_status === 'rejected' ? 'verification-status.html' : 'waiting-approval.html';
       return null;
