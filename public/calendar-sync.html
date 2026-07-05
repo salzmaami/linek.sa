@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Linek | مزامنة iCal</title><link rel="stylesheet" href="app.css"></head>
+<body>
+  <main class="app-shell">
+    <header class="topbar"><a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a><nav><a href="calendar.html">التقويم</a><a class="active" href="calendar-sync.html">iCal</a></nav><button class="button secondary" data-logout type="button">خروج</button></header>
+    <section class="dashboard-grid"><aside class="sidebar" id="sidebar"></aside><div class="stack">
+      <section class="panel"><span class="eyebrow">Calendar Sync</span><h1>مزامنة iCal</h1><p>استورد روابط Airbnb أو Booking.com أو أي منصة iCal. التواريخ المستوردة تُحظر في Linek ولا تعدل يدوياً.</p></section>
+      <section class="panel"><form class="form-grid" id="icalForm"><label class="field"><span>العقار</span><select name="property_id" id="propertySelect"></select></label><label class="field"><span>المنصة</span><select name="platform"><option>Airbnb</option><option>Booking.com</option><option>Vrbo</option><option>Google Calendar</option><option>Apple Calendar</option><option>Other</option></select></label><label class="field full"><span>رابط iCal</span><input name="calendar_url" type="url" required dir="ltr"></label><div class="actions field full"><button class="button" type="submit">حفظ الرابط</button><button class="button secondary" id="copyExport" type="button">نسخ رابط تصدير Linek</button></div></form></section>
+      <section class="panel"><div class="panel-head"><h2>التقويمات المتصلة</h2><button class="button soft" id="manualSync" type="button">مزامنة يدوية</button></div><div class="stack" id="calendarList"></div></section>
+    </div></section>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script src="linek-config.js"></script><script src="linek-app.js"></script><script src="owner-tools.js"></script>
+  <script>
+    document.getElementById('sidebar').innerHTML = OwnerTools.sidebar('calendar-sync.html');
+    let properties = [];
+    async function load() {
+      const context = await OwnerTools.guard();
+      if (!context) return;
+      properties = await OwnerTools.properties();
+      document.getElementById('propertySelect').innerHTML = OwnerTools.propertyOptions(properties);
+      await renderCalendars();
+    }
+    async function renderCalendars() {
+      const propertyId = document.getElementById('propertySelect').value;
+      if (!propertyId) { document.getElementById('calendarList').innerHTML = '<div class="empty">أضف عقاراً أولاً.</div>'; return; }
+      const rows = await Linek.db(`external_calendars?select=*&property_id=eq.${encodeURIComponent(propertyId)}&order=created_at.desc`);
+      document.getElementById('calendarList').innerHTML = rows.map(row => `<article class="card"><div class="panel-head"><div><b>${OwnerTools.escapeHtml(row.platform)}</b><small>${OwnerTools.escapeHtml(row.sync_status)} · آخر مزامنة: ${OwnerTools.dateText(row.last_sync)} · ${row.imported_reservations || 0} حجز مستورد</small></div><span class="badge ${row.sync_status === 'error' ? 'danger' : ''}">${row.active ? 'نشط' : 'متوقف'}</span></div><small dir="ltr">${OwnerTools.escapeHtml(row.calendar_url)}</small><div class="actions"><button class="button danger" data-delete="${row.id}" type="button">حذف</button></div></article>`).join('') || '<div class="empty">لا توجد تقويمات متصلة.</div>';
+      document.querySelectorAll('[data-delete]').forEach(button => button.addEventListener('click', async () => { await Linek.db(`external_calendars?id=eq.${button.dataset.delete}`, {method: 'DELETE', prefer: 'return=minimal'}); renderCalendars(); }));
+    }
+    document.getElementById('propertySelect').addEventListener('change', renderCalendars);
+    document.getElementById('icalForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const data = Linek.formData(event.currentTarget);
+      const button = event.submitter;
+      Linek.setLoading(button, true);
+      try {
+        await Linek.db('external_calendars', {method: 'POST', body: {property_id: data.property_id, platform: data.platform, calendar_url: data.calendar_url, active: true, sync_status: 'active'}});
+        event.currentTarget.reset();
+        Linek.toast('تم حفظ رابط iCal');
+        await renderCalendars();
+      } catch (error) { Linek.toast(error.message); } finally { Linek.setLoading(button, false); }
+    });
+    document.getElementById('copyExport').addEventListener('click', async () => {
+      const propertyId = document.getElementById('propertySelect').value;
+      await navigator.clipboard.writeText(`${location.origin}/api/ical-export?property_id=${encodeURIComponent(propertyId)}`);
+      Linek.toast('تم نسخ رابط التصدير');
+    });
+    document.getElementById('manualSync').addEventListener('click', async event => {
+      const propertyId = document.getElementById('propertySelect').value;
+      const session = Linek.getSession();
+      Linek.setLoading(event.currentTarget, true);
+      try {
+        const response = await fetch('/api/ical-sync', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}`}, body: JSON.stringify({property_id: propertyId})});
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'تعذر المزامنة');
+        Linek.toast(`تمت المزامنة: ${data.imported || 0} تاريخ`);
+        renderCalendars();
+      } catch (error) { Linek.toast(error.message); } finally { Linek.setLoading(event.currentTarget, false); }
+    });
+    load();
+  </script>
+</body>
+</html>

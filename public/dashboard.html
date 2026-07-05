@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Linek | لوحة المالك</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar"><a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a><nav><a class="active" href="dashboard.html">لوحة المالك</a><a href="properties.html">العقارات</a><a href="booking-requests.html">الحجوزات</a></nav><button class="button secondary" data-logout type="button">خروج</button></header>
+    <section class="dashboard-grid">
+      <aside class="sidebar" id="sidebar"></aside>
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-head"><div><span class="eyebrow">ملخص التشغيل</span><h1>لوحة المالك</h1><p id="welcomeLine">جار التحميل...</p></div><a class="button" href="properties.html">إضافة عقار</a></div>
+          <div class="grid-3" id="metrics"></div>
+        </section>
+        <section class="grid-2">
+          <article class="panel"><div class="panel-head"><h2>طلبات حديثة</h2><a href="booking-requests.html">عرض الكل</a></div><div class="stack" id="recentBookings"></div></article>
+          <article class="panel"><div class="panel-head"><h2>إجراءات سريعة</h2></div><div class="stack"><a class="button secondary" href="calendar.html">فتح التقويم</a><a class="button secondary" href="payment-settings.html">إعدادات الدفع</a><a class="button secondary" href="calendar-sync.html">مزامنة iCal</a><button class="button soft" id="copyFirstLink" type="button">نسخ أول رابط حجز</button></div></article>
+        </section>
+      </div>
+    </section>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script src="linek-config.js"></script><script src="linek-app.js"></script><script src="owner-tools.js"></script>
+  <script>
+    document.getElementById('sidebar').innerHTML = OwnerTools.sidebar('dashboard.html');
+    document.addEventListener('DOMContentLoaded', async () => {
+      const context = await OwnerTools.guard();
+      if (!context) return;
+      document.getElementById('welcomeLine').textContent = `مرحباً ${context.profile.full_name}. هذه أرقام آخر 30 يوم.`;
+      const [properties, bookings, visits] = await Promise.all([
+        OwnerTools.properties(),
+        OwnerTools.bookings(),
+        Linek.db('booking_page_visits?select=id,property_id,visited_at')
+      ]);
+      const pending = bookings.filter(item => item.status === 'pending');
+      const confirmed = bookings.filter(item => item.status === 'confirmed');
+      const revenue = confirmed.reduce((sum, item) => sum + Number(item.total_price || item.amount || 0), 0);
+      const conversion = visits.length ? Math.round((bookings.length / visits.length) * 100) : 0;
+      document.getElementById('metrics').innerHTML = [
+        ['العقارات', properties.length],
+        ['طلبات بانتظارك', pending.length],
+        ['حجوزات مؤكدة', confirmed.length],
+        ['زيارات الصفحات', visits.length],
+        ['نسبة التحويل', `${conversion}%`],
+        ['إيراد تقديري', OwnerTools.money(revenue)]
+      ].map(([label, value]) => `<article class="metric-card"><b>${value}</b><span>${label}</span></article>`).join('');
+      document.getElementById('recentBookings').innerHTML = bookings.slice(0, 5).map(booking => `<div class="card"><b>${OwnerTools.escapeHtml(booking.guest_name)}</b><small>${OwnerTools.escapeHtml(booking.properties?.title || booking.properties?.name || '')} · ${OwnerTools.dateText(booking.check_in)} · ${OwnerTools.money(booking.total_price || booking.amount)}</small><span class="badge ${booking.status === 'pending' ? 'warn' : ''}">${OwnerTools.escapeHtml(booking.status)}</span></div>`).join('') || '<div class="empty">لا توجد طلبات حجز بعد.</div>';
+      document.getElementById('copyFirstLink').addEventListener('click', async () => {
+        if (!properties.length) return Linek.toast('أضف عقاراً أولاً');
+        await navigator.clipboard.writeText(OwnerTools.publicLink(properties[0]));
+        Linek.toast('تم نسخ رابط الحجز');
+      });
+    });
+  </script>
+</body>
+</html>

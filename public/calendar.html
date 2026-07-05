@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Linek | التقويم</title><link rel="stylesheet" href="app.css"><style>.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.day-cell{min-height:82px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px;text-align:right}.day-cell[data-status="available"]{background:#effaf3}.day-cell[data-status="blocked"]{background:#f1f1f1}.day-cell[data-status="reserved"]{background:#edf5ff}.day-cell[data-status="pending"]{background:#fff6e6}.day-cell[data-status="external"]{background:#f3edff}@media(max-width:700px){.calendar-grid{grid-template-columns:repeat(2,1fr)}}</style></head>
+<body>
+  <main class="app-shell">
+    <header class="topbar"><a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a><nav><a href="dashboard.html">الملخص</a><a class="active" href="calendar.html">التقويم</a><a href="calendar-sync.html">iCal</a></nav><button class="button secondary" data-logout type="button">خروج</button></header>
+    <section class="dashboard-grid"><aside class="sidebar" id="sidebar"></aside><div class="stack">
+      <section class="panel"><div class="panel-head"><div><span class="eyebrow">التوفر</span><h1>تقويم العقار</h1></div><div class="actions"><button class="button secondary" id="prevMonth" type="button">السابق</button><button class="button secondary" id="nextMonth" type="button">التالي</button></div></div><label class="field"><span>العقار</span><select id="propertySelect"></select></label><div class="actions"><button class="button soft" data-bulk="blocked" type="button">حظر الشهر</button><button class="button soft" data-bulk="available" type="button">فتح الشهر</button></div></section>
+      <section class="panel"><h2 id="monthTitle">-</h2><div class="calendar-grid" id="calendarGrid"></div></section>
+    </div></section>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script src="linek-config.js"></script><script src="linek-app.js"></script><script src="owner-tools.js"></script>
+  <script>
+    document.getElementById('sidebar').innerHTML = OwnerTools.sidebar('calendar.html');
+    let properties = [];
+    let current = new Date();
+    async function load() {
+      const context = await OwnerTools.guard();
+      if (!context) return;
+      properties = await OwnerTools.properties();
+      document.getElementById('propertySelect').innerHTML = OwnerTools.propertyOptions(properties);
+      render();
+    }
+    function iso(date) { return date.toISOString().slice(0, 10); }
+    async function rowsForMonth(propertyId, start, end) {
+      return Linek.db(`availability?select=*&property_id=eq.${encodeURIComponent(propertyId)}&date=gte.${iso(start)}&date=lt.${iso(end)}`);
+    }
+    async function setDay(propertyId, date, status) {
+      const existing = await Linek.db(`availability?select=id&property_id=eq.${encodeURIComponent(propertyId)}&date=eq.${date}&limit=1`);
+      const body = {property_id: propertyId, date, status};
+      if (existing.length) await Linek.db(`availability?id=eq.${existing[0].id}`, {method: 'PATCH', body});
+      else await Linek.db('availability', {method: 'POST', body});
+    }
+    async function render() {
+      const propertyId = document.getElementById('propertySelect').value;
+      const grid = document.getElementById('calendarGrid');
+      if (!propertyId) { grid.innerHTML = '<div class="empty">أضف عقاراً أولاً.</div>'; return; }
+      const start = new Date(current.getFullYear(), current.getMonth(), 1);
+      const end = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+      document.getElementById('monthTitle').textContent = new Intl.DateTimeFormat('ar-SA', {month: 'long', year: 'numeric'}).format(start);
+      const rows = await rowsForMonth(propertyId, start, end);
+      const byDate = Object.fromEntries(rows.map(row => [row.date, row.status]));
+      const cells = [];
+      for (let date = new Date(start); date < end; date.setDate(date.getDate() + 1)) {
+        const value = iso(date);
+        const status = byDate[value] || 'available';
+        cells.push(`<button class="day-cell" data-date="${value}" data-status="${status}" type="button"><b>${date.getDate()}</b><br><small>${status}</small></button>`);
+      }
+      grid.innerHTML = cells.join('');
+      grid.querySelectorAll('.day-cell').forEach(button => button.addEventListener('click', async () => {
+        const statuses = ['available', 'blocked'];
+        const next = statuses[(statuses.indexOf(button.dataset.status) + 1) % statuses.length];
+        await setDay(propertyId, button.dataset.date, next);
+        Linek.toast(next === 'blocked' ? 'تم حظر التاريخ' : 'تم فتح التاريخ');
+        render();
+      }));
+    }
+    document.getElementById('propertySelect').addEventListener('change', render);
+    document.getElementById('prevMonth').addEventListener('click', () => { current = new Date(current.getFullYear(), current.getMonth() - 1, 1); render(); });
+    document.getElementById('nextMonth').addEventListener('click', () => { current = new Date(current.getFullYear(), current.getMonth() + 1, 1); render(); });
+    document.querySelectorAll('[data-bulk]').forEach(button => button.addEventListener('click', async () => {
+      const propertyId = document.getElementById('propertySelect').value;
+      const start = new Date(current.getFullYear(), current.getMonth(), 1);
+      const end = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+      Linek.setLoading(button, true);
+      for (let date = new Date(start); date < end; date.setDate(date.getDate() + 1)) await setDay(propertyId, iso(date), button.dataset.bulk);
+      Linek.setLoading(button, false);
+      render();
+    }));
+    load();
+  </script>
+</body>
+</html>

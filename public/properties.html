@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Linek | العقارات</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar"><a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a><nav><a href="dashboard.html">الملخص</a><a class="active" href="properties.html">العقارات</a><a href="calendar.html">التقويم</a></nav><button class="button secondary" data-logout type="button">خروج</button></header>
+    <section class="dashboard-grid">
+      <aside class="sidebar" id="sidebar"></aside>
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-head"><div><span class="eyebrow">إدارة العقارات</span><h1>عقاراتك وروابط الحجز</h1></div></div>
+          <div class="stack" id="propertiesList"><div class="empty">جار التحميل...</div></div>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><h2>إضافة أو تعديل عقار</h2><button class="button secondary" id="resetForm" type="button">نموذج جديد</button></div>
+          <form class="form-grid" id="propertyForm">
+            <input type="hidden" name="id">
+            <label class="field"><span>اسم العقار</span><input name="title" required minlength="2"></label>
+            <label class="field"><span>Slug</span><input name="slug" required pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$" dir="ltr"></label>
+            <label class="field"><span>المدينة</span><input name="city" required></label>
+            <label class="field"><span>الحي</span><input name="district"></label>
+            <label class="field full"><span>العنوان</span><input name="address"></label>
+            <label class="field full"><span>الوصف</span><textarea name="description"></textarea></label>
+            <label class="field"><span>الضيوف</span><input name="guests" type="number" min="1" value="1"></label>
+            <label class="field"><span>غرف النوم</span><input name="bedrooms" type="number" min="0" value="1"></label>
+            <label class="field"><span>دورات المياه</span><input name="bathrooms" type="number" min="0" value="1"></label>
+            <label class="field"><span>السعر الأساسي</span><input name="base_price" type="number" min="0" required></label>
+            <label class="field"><span>سعر نهاية الأسبوع</span><input name="weekend_price" type="number" min="0"></label>
+            <label class="field"><span>رسوم التنظيف</span><input name="cleaning_fee" type="number" min="0" value="0"></label>
+            <label class="field"><span>الدخول</span><input name="check_in" placeholder="4:00 مساءً"></label>
+            <label class="field"><span>الخروج</span><input name="check_out" placeholder="12:00 ظهراً"></label>
+            <label class="field full"><span>رابط Google Maps</span><input name="map_link" type="url" dir="ltr"></label>
+            <label class="field full"><span>المرافق</span><input name="amenities" placeholder="WiFi, Pool, Kitchen"></label>
+            <label class="field full"><span>روابط الصور</span><textarea name="photos" placeholder="ضع كل رابط صورة في سطر"></textarea></label>
+            <label class="field full"><span>سياسة الإلغاء</span><textarea name="cancellation_policy"></textarea></label>
+            <label class="field full"><span>تعليمات المكان</span><textarea name="rules"></textarea></label>
+            <div class="actions field full"><button class="button" type="submit" data-status="published">نشر العقار</button><button class="button secondary" type="submit" data-status="draft">حفظ مسودة</button></div>
+          </form>
+        </section>
+      </div>
+    </section>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script src="linek-config.js"></script><script src="linek-app.js"></script><script src="owner-tools.js"></script>
+  <script>
+    const form = document.getElementById('propertyForm');
+    let context = null;
+    document.getElementById('sidebar').innerHTML = OwnerTools.sidebar('properties.html');
+    form.elements.title.addEventListener('input', () => {
+      if (!form.elements.id.value) form.elements.slug.value = OwnerTools.slugify(form.elements.title.value);
+    });
+    document.getElementById('resetForm').addEventListener('click', () => form.reset());
+    async function load() {
+      context = await OwnerTools.guard();
+      if (!context) return;
+      const properties = await OwnerTools.properties();
+      document.getElementById('propertiesList').innerHTML = properties.map(property => {
+        const link = OwnerTools.publicLink(property);
+        return `<article class="card"><div class="panel-head"><div><b>${OwnerTools.escapeHtml(property.title || property.name)}</b><small>${OwnerTools.escapeHtml(property.city)} · ${OwnerTools.money(property.base_price)} · ${OwnerTools.escapeHtml(property.status)}</small></div><span class="badge ${property.status === 'draft' ? 'warn' : ''}">${property.status === 'published' ? 'منشور' : 'مسودة'}</span></div><div class="actions"><a class="button secondary" href="${link}" target="_blank" rel="noopener">معاينة</a><button class="button soft" data-copy="${link}" type="button">نسخ الرابط</button><button class="button secondary" data-edit="${property.id}" type="button">تعديل</button></div></article>`;
+      }).join('') || '<div class="empty">ليس لديك أي عقار حتى الآن. استخدم النموذج لإضافة أول عقار.</div>';
+      document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', async () => { await navigator.clipboard.writeText(button.dataset.copy); Linek.toast('تم نسخ الرابط'); }));
+      document.querySelectorAll('[data-edit]').forEach(button => button.addEventListener('click', () => {
+        const property = properties.find(item => item.id === button.dataset.edit);
+        Object.entries(property).forEach(([key, value]) => { if (form.elements[key]) form.elements[key].value = value ?? ''; });
+        form.elements.photos.value = (property.property_photos || []).map(photo => photo.url).join('\n');
+        form.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }));
+    }
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const submitter = event.submitter;
+      const data = Linek.formData(form);
+      const body = {
+        owner_profile_id: context.profile.id,
+        title: data.title,
+        name: data.title,
+        slug: data.slug,
+        city: data.city,
+        district: data.district || null,
+        address: data.address || null,
+        description: data.description || null,
+        guests: Number(data.guests || 1),
+        bedrooms: Number(data.bedrooms || 1),
+        bathrooms: Number(data.bathrooms || 1),
+        base_price: Number(data.base_price || 0),
+        weekend_price: data.weekend_price ? Number(data.weekend_price) : null,
+        cleaning_fee: Number(data.cleaning_fee || 0),
+        check_in: data.check_in || null,
+        check_out: data.check_out || null,
+        map_link: data.map_link || null,
+        cancellation_policy: data.cancellation_policy || null,
+        rules: data.rules || null,
+        property_type: 'شاليه',
+        verification_status: 'verified_payment_reviewed',
+        status: submitter.dataset.status
+      };
+      Linek.setLoading(submitter, true);
+      try {
+        const path = data.id ? `properties?id=eq.${encodeURIComponent(data.id)}` : 'properties';
+        const rows = await Linek.db(path, {method: data.id ? 'PATCH' : 'POST', body});
+        const property = rows[0];
+        const photos = data.photos.split(/\n|,/).map(item => item.trim()).filter(Boolean);
+        if (data.id) await Linek.db(`property_photos?property_id=eq.${encodeURIComponent(data.id)}`, {method: 'DELETE', prefer: 'return=minimal'});
+        if (photos.length) {
+          await Linek.db('property_photos', {method: 'POST', body: photos.map((url, index) => ({property_id: property.id, url, sort_order: index, is_cover: index === 0}))});
+        }
+        Linek.toast('تم حفظ العقار');
+        form.reset();
+        await load();
+      } catch (error) {
+        Linek.toast(error.message);
+      } finally {
+        Linek.setLoading(submitter, false);
+      }
+    });
+    load();
+  </script>
+</body>
+</html>
