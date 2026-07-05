@@ -86,6 +86,34 @@ create table if not exists public.owners (
   updated_at timestamptz not null default now()
 );
 
+alter table public.owners add column if not exists user_id uuid references public.users(id) on delete set null;
+alter table public.owners add column if not exists owner_profile_id uuid references public.owner_profiles(id) on delete set null;
+alter table public.owners add column if not exists lead_id uuid;
+alter table public.owners add column if not exists plan_code text not null default 'starter';
+alter table public.owners add column if not exists trial_started_at timestamptz;
+alter table public.owners add column if not exists trial_ends_at timestamptz;
+alter table public.owners add column if not exists subscription_status text not null default 'trial';
+alter table public.owners add column if not exists linek_subscription_payment_link text;
+alter table public.owners add column if not exists linek_subscription_paid_at timestamptz;
+alter table public.owners add column if not exists last_trial_alert_at timestamptz;
+alter table public.owners add column if not exists internal_note text;
+alter table public.owners add column if not exists updated_at timestamptz not null default now();
+
+alter table public.owners drop constraint if exists owners_status_check;
+alter table public.owners
+  add constraint owners_status_check
+  check (status in ('active', 'paused', 'rejected'));
+
+alter table public.owners drop constraint if exists owners_plan_code_check;
+alter table public.owners
+  add constraint owners_plan_code_check
+  check (plan_code in ('single', 'multi', 'custom', 'starter', 'professional'));
+
+alter table public.owners drop constraint if exists owners_subscription_status_check;
+alter table public.owners
+  add constraint owners_subscription_status_check
+  check (subscription_status in ('trial', 'active', 'expired', 'cancelled'));
+
 do $$
 begin
   if exists (
@@ -173,6 +201,67 @@ create table if not exists public.properties (
   constraint properties_owner_required check (owner_id is not null or owner_profile_id is not null),
   constraint properties_title_or_name_required check (coalesce(nullif(title, ''), nullif(name, '')) is not null)
 );
+
+alter table public.properties add column if not exists owner_profile_id uuid references public.owner_profiles(id) on delete cascade;
+alter table public.properties add column if not exists title text;
+alter table public.properties add column if not exists name text;
+alter table public.properties add column if not exists description text;
+alter table public.properties add column if not exists district text;
+alter table public.properties add column if not exists address text;
+alter table public.properties add column if not exists latitude numeric(10,7);
+alter table public.properties add column if not exists longitude numeric(10,7);
+alter table public.properties add column if not exists property_type text not null default 'شاليه';
+alter table public.properties add column if not exists map_link text;
+alter table public.properties add column if not exists guests integer not null default 1;
+alter table public.properties add column if not exists bedrooms integer not null default 1;
+alter table public.properties add column if not exists bathrooms integer not null default 1;
+alter table public.properties add column if not exists base_price integer not null default 0;
+alter table public.properties add column if not exists weekend_price integer;
+alter table public.properties add column if not exists cleaning_fee integer not null default 0;
+alter table public.properties add column if not exists security_deposit integer;
+alter table public.properties add column if not exists check_in text;
+alter table public.properties add column if not exists check_out text;
+alter table public.properties add column if not exists rules text;
+alter table public.properties add column if not exists cancellation_policy text;
+alter table public.properties add column if not exists payment_link text;
+alter table public.properties add column if not exists payment_method_note text;
+alter table public.properties add column if not exists verification_status text not null default 'under_review';
+alter table public.properties add column if not exists status text not null default 'draft';
+alter table public.properties add column if not exists calendar_last_synced_at timestamptz;
+alter table public.properties add column if not exists owner_setup_token text;
+alter table public.properties add column if not exists owner_setup_submitted_at timestamptz;
+alter table public.properties add column if not exists internal_note text;
+alter table public.properties add column if not exists published_at timestamptz;
+alter table public.properties add column if not exists updated_at timestamptz not null default now();
+alter table public.properties alter column owner_id drop not null;
+alter table public.properties alter column property_type set default 'شاليه';
+alter table public.properties alter column guests set default 1;
+alter table public.properties alter column bedrooms set default 1;
+alter table public.properties alter column bathrooms set default 1;
+alter table public.properties alter column base_price set default 0;
+alter table public.properties alter column cleaning_fee set default 0;
+alter table public.properties alter column verification_status set default 'under_review';
+alter table public.properties alter column status set default 'draft';
+
+alter table public.properties drop constraint if exists properties_status_check;
+alter table public.properties
+  add constraint properties_status_check
+  check (status in ('draft', 'under_review', 'published', 'active', 'inactive', 'paused', 'hidden', 'rejected'));
+
+alter table public.properties drop constraint if exists properties_verification_status_check;
+alter table public.properties
+  add constraint properties_verification_status_check
+  check (verification_status in ('under_review', 'verified_basic', 'verified_payment_reviewed', 'rejected'));
+
+alter table public.properties drop constraint if exists properties_owner_required;
+alter table public.properties
+  add constraint properties_owner_required
+  check (owner_id is not null or owner_profile_id is not null);
+
+alter table public.properties drop constraint if exists properties_title_or_name_required;
+alter table public.properties
+  add constraint properties_title_or_name_required
+  check (coalesce(nullif(title, ''), nullif(name, '')) is not null);
 
 update public.properties
 set title = coalesce(title, name),
@@ -319,6 +408,65 @@ create table if not exists public.bookings (
     or booking_date is not null
   )
 );
+
+alter table public.bookings add column if not exists public_code text;
+alter table public.bookings add column if not exists reference text;
+alter table public.bookings add column if not exists guest_access_token text;
+alter table public.bookings add column if not exists owner_id uuid references public.owners(id) on delete set null;
+alter table public.bookings add column if not exists owner_profile_id uuid references public.owner_profiles(id) on delete set null;
+alter table public.bookings add column if not exists guest_mobile text;
+alter table public.bookings add column if not exists guest_phone text;
+alter table public.bookings add column if not exists check_in date;
+alter table public.bookings add column if not exists check_out date;
+alter table public.bookings add column if not exists booking_date date;
+alter table public.bookings add column if not exists guests_count integer not null default 1;
+alter table public.bookings add column if not exists guests integer;
+alter table public.bookings add column if not exists notes text;
+alter table public.bookings add column if not exists total_price integer not null default 0;
+alter table public.bookings add column if not exists amount integer not null default 0;
+alter table public.bookings add column if not exists payment_link_snapshot text;
+alter table public.bookings add column if not exists payment_instructions_snapshot text;
+alter table public.bookings add column if not exists status text not null default 'pending';
+alter table public.bookings add column if not exists payment_status text not null default 'not_started';
+alter table public.bookings add column if not exists owner_decision_note text;
+alter table public.bookings add column if not exists viewed_by_owner_at timestamptz;
+alter table public.bookings add column if not exists decided_at timestamptz;
+alter table public.bookings add column if not exists expires_at timestamptz not null default (now() + interval '30 minutes');
+alter table public.bookings add column if not exists updated_at timestamptz not null default now();
+alter table public.bookings alter column public_code set default public.next_booking_reference();
+alter table public.bookings alter column guest_access_token set default encode(gen_random_bytes(24), 'hex');
+alter table public.bookings alter column guests_count set default 1;
+alter table public.bookings alter column total_price set default 0;
+alter table public.bookings alter column amount set default 0;
+alter table public.bookings alter column status set default 'pending';
+alter table public.bookings alter column payment_status set default 'not_started';
+alter table public.bookings alter column expires_at set default (now() + interval '30 minutes');
+
+update public.bookings
+set public_code = coalesce(public_code, 'LNK-' || to_char(created_at, 'YYYY') || '-' || upper(substr(replace(id::text, '-', ''), 1, 6))),
+    guest_access_token = coalesce(guest_access_token, encode(gen_random_bytes(24), 'hex'))
+where public_code is null or guest_access_token is null;
+
+alter table public.bookings alter column public_code set not null;
+alter table public.bookings alter column guest_access_token set not null;
+
+alter table public.bookings drop constraint if exists bookings_status_check;
+alter table public.bookings
+  add constraint bookings_status_check
+  check (status in ('new', 'pending', 'pending_owner_approval', 'pending_payment', 'confirmed', 'rejected', 'expired', 'cancelled'));
+
+alter table public.bookings drop constraint if exists bookings_payment_status_check;
+alter table public.bookings
+  add constraint bookings_payment_status_check
+  check (payment_status in ('not_started', 'waiting_for_payment', 'paid_unverified', 'paid_confirmed', 'cancelled'));
+
+alter table public.bookings drop constraint if exists bookings_dates_required;
+alter table public.bookings
+  add constraint bookings_dates_required
+  check (
+    (check_in is not null and check_out is not null and check_out > check_in)
+    or booking_date is not null
+  );
 
 update public.bookings
 set reference = coalesce(reference, public_code),
