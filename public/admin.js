@@ -1,6 +1,6 @@
 const state = {
   token: sessionStorage.getItem('linek_admin_token') || '',
-  data: {leads: [], owners: [], properties: [], bookings: []}
+  data: {leads: [], owners: [], properties: [], bookings: [], ownerProfiles: [], verificationRequests: []}
 };
 
 const tokenInput = document.getElementById('adminToken');
@@ -103,10 +103,11 @@ function setMetrics() {
   const leads = state.data.leads || [];
   const owners = state.data.owners || [];
   const bookings = state.data.bookings || [];
+  const verificationRequests = state.data.verificationRequests || [];
   const alerts = owners.filter(owner => owner.trial_needs_alert || owner.trial_expired).length;
   document.getElementById('metricLeads').textContent = leads.filter(lead => ['new', 'contacted', 'qualified'].includes(lead.status)).length;
   document.getElementById('metricOwners').textContent = owners.filter(owner => owner.subscription_status === 'trial' && owner.status === 'active').length;
-  document.getElementById('metricAlerts').textContent = alerts;
+  document.getElementById('metricAlerts').textContent = verificationRequests.filter(request => request.status === 'submitted').length || alerts;
   document.getElementById('metricBookings').textContent = bookings.length;
 }
 
@@ -286,6 +287,63 @@ function renderProperties() {
   }).join('');
 }
 
+function profileStatusLabel(status) {
+  const labels = {
+    pending: 'بانتظار المراجعة',
+    approved: 'معتمد',
+    rejected: 'مرفوض',
+    more_information_required: 'معلومات إضافية'
+  };
+  return labels[status] || status || 'بانتظار';
+}
+
+function latestRequestForProfile(profileId) {
+  return (state.data.verificationRequests || []).find(request => request.owner_id === profileId) || null;
+}
+
+function renderVerifications() {
+  const list = document.getElementById('verificationList');
+  if (!list) return;
+  const profiles = state.data.ownerProfiles || [];
+  if (!profiles.length) {
+    list.innerHTML = '<div class="empty">لا توجد حسابات ملاك من مسار التسجيل الجديد.</div>';
+    return;
+  }
+  list.innerHTML = profiles.map(profile => {
+    const request = latestRequestForProfile(profile.id);
+    const whatsapp = whatsappLink(profile.whatsapp_number, `مرحباً ${profile.full_name || ''}،\nتم تحديث حالة توثيق حسابك في Linek: ${profileStatusLabel(profile.verification_status)}.`);
+    return `
+      <details class="card" data-profile-card="${escapeHtml(profile.id)}">
+        <summary class="card-head">
+          <div class="title">
+            <b>${escapeHtml(profile.full_name)}</b>
+            <small>${escapeHtml(profile.whatsapp_number)} · ${escapeHtml(profile.city)} · ${dateText(profile.created_at)}</small>
+          </div>
+          <span class="badge ${profile.verification_status === 'rejected' ? 'danger' : profile.verification_status === 'pending' ? 'warn' : ''}">${escapeHtml(profileStatusLabel(profile.verification_status))}</span>
+        </summary>
+        <div class="fields">
+          <label><span>النشاط</span><input value="${escapeHtml(profile.business_name || '-')}" readonly></label>
+          <label><span>حالة الطلب</span><input value="${escapeHtml(request?.status || 'لا يوجد طلب مرفوع')}" readonly></label>
+          <label class="full"><span>ملفات التوثيق</span><textarea readonly dir="ltr">${escapeHtml([
+            request?.national_id_file,
+            request?.selfie_file,
+            request?.ownership_document,
+            request?.commercial_registration
+          ].filter(Boolean).join('\n') || 'لم ترفع ملفات بعد')}</textarea></label>
+          <label class="full"><span>ملاحظات المالك</span><textarea readonly>${escapeHtml(request?.notes || '-')}</textarea></label>
+          <label class="full"><span>سبب القرار</span><textarea data-field="verification_reason" placeholder="يظهر للمالك عند الرفض أو طلب معلومات إضافية">${escapeHtml(profile.rejection_reason || '')}</textarea></label>
+        </div>
+        <div class="actions">
+          <button type="button" data-action="verification-decision" data-decision="approve" data-profile-id="${escapeHtml(profile.id)}">اعتماد الحساب</button>
+          <button type="button" class="secondary" data-action="verification-decision" data-decision="more" data-profile-id="${escapeHtml(profile.id)}">طلب معلومات إضافية</button>
+          <button type="button" class="danger" data-action="verification-decision" data-decision="reject" data-profile-id="${escapeHtml(profile.id)}">رفض</button>
+          <a class="button-link secondary" href="${whatsapp}" target="_blank" rel="noopener">إشعار واتساب</a>
+        </div>
+      </details>
+    `;
+  }).join('');
+}
+
 function bookingActions(booking) {
   return `
     <button type="button" data-action="booking-status" data-booking-id="${escapeHtml(booking.id)}" data-status="pending_payment" data-payment-status="waiting_for_payment">قبول وبانتظار الدفع</button>
@@ -319,6 +377,7 @@ function renderBookings() {
 
 function render() {
   setMetrics();
+  renderVerifications();
   renderLeads();
   renderOwners();
   renderProperties();
@@ -425,6 +484,19 @@ document.body.addEventListener('click', async event => {
         payment_status: button.dataset.paymentStatus
       });
       showToast('تم تحديث طلب الحجز');
+      await loadDashboard();
+    }
+
+    if (button.dataset.action === 'verification-decision') {
+      const card = button.closest('[data-profile-card]');
+      const fields = readCardFields(card);
+      await apiPost({
+        action: 'updateVerification',
+        profileId: button.dataset.profileId,
+        decision: button.dataset.decision,
+        reason: fields.verification_reason || ''
+      });
+      showToast('تم تحديث حالة التوثيق');
       await loadDashboard();
     }
 

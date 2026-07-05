@@ -103,18 +103,22 @@ function enrichOwner(owner) {
 }
 
 async function getDashboard(config) {
-  const [leads, owners, properties, bookings] = await Promise.all([
+  const [leads, owners, properties, bookings, ownerProfiles, verificationRequests] = await Promise.all([
     supabase(config, `leads?select=*&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
     supabase(config, `owners?select=*&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
     supabase(config, `properties?select=*,owners(name,phone,subscription_status,trial_ends_at,linek_subscription_payment_link),property_photos(url,sort_order,is_cover)&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
-    supabase(config, `bookings?select=*,properties(name,slug,owner_id,owners(name,phone))&order=created_at.desc&limit=${DEFAULT_LIMIT}`)
+    supabase(config, `bookings?select=*,properties(name,title,slug,owner_id,owner_profile_id,owners(name,phone))&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
+    supabase(config, `owner_profiles?select=*&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
+    supabase(config, `verification_requests?select=*&order=created_at.desc&limit=${DEFAULT_LIMIT}`)
   ]);
 
   return {
     leads,
     owners: owners.map(enrichOwner),
     properties,
-    bookings
+    bookings,
+    ownerProfiles,
+    verificationRequests
   };
 }
 
@@ -318,6 +322,71 @@ async function updateBooking(config, body) {
   return rows[0];
 }
 
+async function updateVerification(config, body) {
+  const profileId = cleanText(body.profileId);
+  const decision = cleanText(body.decision);
+  const reason = cleanText(body.reason);
+  const statusMap = {
+    approve: 'approved',
+    reject: 'rejected',
+    more: 'more_information_required'
+  };
+  const requestStatusMap = {
+    approve: 'approved',
+    reject: 'rejected',
+    more: 'need_more_information'
+  };
+  if (!profileId || !statusMap[decision]) {
+    const error = new Error('Invalid verification decision');
+    error.status = 400;
+    throw error;
+  }
+
+  const now = new Date().toISOString();
+  const profileRows = await supabase(config, `owner_profiles?id=eq.${encodeURIComponent(profileId)}`, {
+    method: 'PATCH',
+    body: {
+      verification_status: statusMap[decision],
+      approved_at: decision === 'approve' ? now : null,
+      rejection_reason: decision === 'approve' ? null : (reason || 'قرار مراجعة من لوحة Linek')
+    }
+  });
+  const profile = profileRows[0];
+
+  await supabase(config, `verification_requests?owner_id=eq.${encodeURIComponent(profileId)}&status=in.(submitted,draft,need_more_information)`, {
+    method: 'PATCH',
+    body: {
+      status: requestStatusMap[decision],
+      reviewed_at: now,
+      rejection_reason: decision === 'approve' ? null : (reason || 'قرار مراجعة من لوحة Linek')
+    }
+  });
+
+  const existingSubscriptions = await supabase(config, `subscriptions?select=id&owner_id=eq.${encodeURIComponent(profileId)}&limit=1`);
+  if (decision === 'approve' && !existingSubscriptions.length) {
+    await supabase(config, 'subscriptions', {
+      method: 'POST',
+      body: {
+        owner_id: profileId,
+        plan: 'starter',
+        status: 'trial',
+        start_date: new Date().toISOString().slice(0, 10),
+        renewal_date: addDays(new Date(), 14).slice(0, 10)
+      }
+    });
+  }
+
+  await supabase(config, 'audit_logs', {
+    method: 'POST',
+    body: {
+      action: decision === 'approve' ? 'Verification Approved' : decision === 'reject' ? 'Verification Rejected' : 'Verification More Information',
+      metadata: {owner_profile_id: profileId, reason}
+    }
+  });
+
+  return profile;
+}
+
 async function pauseExpiredTrials(config) {
   const now = new Date().toISOString();
   const expiredOwners = await supabase(config, `owners?select=id&subscription_status=eq.trial&trial_ends_at=lte.${encodeURIComponent(now)}`);
@@ -360,6 +429,7 @@ async function handler(req, res) {
       updateOwner,
       updateProperty,
       updateBooking,
+      updateVerification,
       pauseExpiredTrials
     };
 
