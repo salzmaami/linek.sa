@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Linek | حالة التوثيق</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar"><a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a><nav><a class="active" href="verification-status.html">حالة التوثيق</a><a href="verification-upload.html">رفع جديد</a></nav><button class="button secondary" data-logout type="button">خروج</button></header>
+    <section class="hero-panel">
+      <div><span class="eyebrow">حالة الطلب</span><h1 id="statusTitle">حالة التوثيق</h1><p id="statusDescription">جار تحميل حالة التوثيق.</p><div class="actions" id="statusActions"></div></div>
+      <div class="panel"><div class="status-steps" id="statusSteps"><span>Pending</span><span>Approved</span><span>Rejected</span><span>Need More Information</span></div><div class="notice" id="statusBox">-</div></div>
+    </section>
+  </main>
+  <script src="linek-config.js"></script>
+  <script src="linek-app.js"></script>
+  <script>
+    const labels = {
+      pending: ['طلبك قيد المراجعة', 'سنراجع بياناتك ونرسل لك رسالة واتساب بمجرد اعتماد حسابك.', 'notice warn'],
+      approved: ['تم اعتماد حسابك', 'يمكنك الآن إدارة العقارات والحجوزات من لوحة المالك.', 'notice success'],
+      rejected: ['تم رفض طلب التوثيق', 'راجع السبب الموضح ثم أرسل طلب توثيق جديد إذا رغبت.', 'notice error'],
+      more_information_required: ['نحتاج معلومات إضافية', 'أرسل الملفات أو البيانات المطلوبة ليكمل فريق Linek المراجعة.', 'notice warn']
+    };
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await Linek.requireOwner();
+      if (!user) return;
+      const profile = await Linek.ownerProfile();
+      const status = profile?.verification_status || 'pending';
+      const item = labels[status] || labels.pending;
+      document.getElementById('statusTitle').textContent = item[0];
+      document.getElementById('statusDescription').textContent = item[1];
+      const box = document.getElementById('statusBox');
+      box.className = item[2];
+      box.textContent = profile?.rejection_reason || item[1];
+      document.querySelectorAll('#statusSteps span').forEach(span => span.classList.toggle('active', span.textContent.toLowerCase().replaceAll(' ', '_') === status));
+      document.getElementById('statusActions').innerHTML = status === 'approved'
+        ? '<a class="button" href="dashboard.html">فتح لوحة المالك</a>'
+        : '<a class="button" href="verification-upload.html">إرسال التوثيق مرة أخرى</a><a class="button secondary" href="https://wa.me/966570547475" target="_blank" rel="noopener">تواصل مع الدعم</a>';
+    });
+  </script>
+</body>
+</html>
