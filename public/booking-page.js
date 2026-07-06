@@ -37,11 +37,11 @@ const BookingPage = (() => {
   async function loadProperty() {
     const slug = params().get('slug') || '';
     if (!slug) throw new Error('رابط العقار غير مكتمل');
-    const rows = await Linek.db(`properties?select=*,property_photos(url,sort_order,is_cover)&slug=eq.${encodeURIComponent(slug)}&status=in.(published,active)&limit=1`);
+    const rows = await Linek.db(`properties?select=*,property_photos(url,sort_order,is_cover)&slug=eq.${encodeURIComponent(slug)}&status=in.(published,active)&limit=1`, {public: true});
     if (!rows.length) throw new Error('العقار غير موجود أو غير منشور');
     property = rows[0];
     try {
-      await Linek.db('booking_page_visits', {method: 'POST', prefer: 'return=minimal', body: {property_id: property.id, visitor_identifier: localStorage.getItem('linek_visitor_id') || crypto.randomUUID(), user_agent: navigator.userAgent, referrer: document.referrer || null}});
+      await Linek.db('booking_page_visits', {public: true, method: 'POST', prefer: 'return=minimal', body: {property_id: property.id, visitor_identifier: localStorage.getItem('linek_visitor_id') || crypto.randomUUID(), user_agent: navigator.userAgent, referrer: document.referrer || null}});
     } catch (_) {}
     return property;
   }
@@ -134,5 +134,12 @@ const BookingPage = (() => {
 document.getElementById('startBooking').addEventListener('click', () => {
   document.getElementById('bookingArea').scrollIntoView({behavior: 'smooth', block: 'start'});
 });
+
+const topBookingButton = document.getElementById('startBookingTop');
+if (topBookingButton) {
+  topBookingButton.addEventListener('click', () => {
+    document.getElementById('bookingArea').scrollIntoView({behavior: 'smooth', block: 'start'});
+  });
+}
 
 BookingPage.init();

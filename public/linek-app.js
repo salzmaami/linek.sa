@@ -60,7 +60,7 @@ const Linek = (() => {
     const cfg = await loadConfig();
     if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) throw new Error('إعدادات Supabase غير مكتملة');
     const session = getSession();
-    const token = options.token || session?.access_token || cfg.supabaseAnonKey;
+    const token = options.public ? cfg.supabaseAnonKey : (options.token || session?.access_token || cfg.supabaseAnonKey);
     const response = await fetch(`${cfg.supabaseUrl}${path}`, {
       method: options.method || 'GET',
       headers: {
@@ -77,7 +77,16 @@ const Linek = (() => {
     if (text) {
       try { data = JSON.parse(text); } catch (_) { data = text; }
     }
-    if (!response.ok) throw new Error(data?.msg || data?.message || data?.error_description || 'تعذر تنفيذ العملية');
+    if (!response.ok) {
+      const message = data?.msg || data?.message || data?.error_description || 'تعذر تنفيذ العملية';
+      if (response.status === 401 || /jwt expired/i.test(message)) {
+        clearSession();
+        const error = new Error('انتهت جلسة الدخول. سجل دخولك مرة أخرى.');
+        error.code = 'SESSION_EXPIRED';
+        throw error;
+      }
+      throw new Error(message);
+    }
     return data;
   }
 
@@ -149,7 +158,12 @@ const Linek = (() => {
   async function currentUser() {
     const session = getSession();
     if (!session?.access_token) return null;
-    return request('/auth/v1/user', {token: session.access_token});
+    try {
+      return await request('/auth/v1/user', {token: session.access_token});
+    } catch (error) {
+      if (error.code === 'SESSION_EXPIRED') return null;
+      throw error;
+    }
   }
 
   async function ownerProfile() {
