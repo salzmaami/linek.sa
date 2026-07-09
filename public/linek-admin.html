@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>لوحة Linek الداخلية</title>
-  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="admin.css?v=20260709-donut">
 </head>
 <body>
   <main class="shell">
@@ -26,10 +26,22 @@
     </header>
 
     <section class="metrics" aria-label="ملخص التشغيل">
-      <article><b id="metricLeads">-</b><span>طلبات بداية</span></article>
-      <article><b id="metricOwners">-</b><span>تجارب فعالة</span></article>
-      <article><b id="metricAlerts">-</b><span>تنبيهات تجربة</span></article>
-      <article><b id="metricBookings">-</b><span>طلبات حجز</span></article>
+      <button type="button" class="metric-card metric-success" data-open-section="ownersPanel">
+        <span class="metric-ring"><b id="metricActiveSubscriptions">-</b></span>
+        <span class="metric-label">اشتراكات فعالة</span>
+      </button>
+      <button type="button" class="metric-card metric-warn" data-open-section="ownersPanel">
+        <span class="metric-ring"><b id="metricExpiredTrials">-</b></span>
+        <span class="metric-label">تجارب منتهية</span>
+      </button>
+      <button type="button" class="metric-card metric-danger" data-open-section="ownersPanel">
+        <span class="metric-ring"><b id="metricCancelledOwners">-</b></span>
+        <span class="metric-label">اشتراكات ملغاة</span>
+      </button>
+      <button type="button" class="metric-card metric-info" data-open-section="verificationPanel">
+        <span class="metric-ring"><b id="metricPendingApprovals">-</b></span>
+        <span class="metric-label">بانتظار الموافقة</span>
+      </button>
     </section>
 
     <section class="toolbar">
@@ -39,53 +51,100 @@
     </section>
 
     <section class="grid">
-      <article class="panel span-12">
-        <div class="panel-head">
+      <details class="panel span-12 admin-section" id="pricingPanel" open>
+        <summary class="panel-head">
+          <h2>تسعير الموقع والخصومات</h2>
+          <span>تظهر هذه القيم تلقائياً في الصفحة الرئيسية بعد الحفظ</span>
+        </summary>
+        <form class="settings-form" id="pricingForm">
+          <label>
+            <span>سعر الباقة الأساسية</span>
+            <input name="single_price" type="number" min="0" step="1" value="199">
+          </label>
+          <label>
+            <span>سعر باقة النمو</span>
+            <input name="multi_price" type="number" min="0" step="1" value="299">
+          </label>
+          <label>
+            <span>نص الباقة المخصصة</span>
+            <input name="custom_label" value="تواصل معنا">
+          </label>
+          <label>
+            <span>مدة التجربة بالأيام</span>
+            <input name="trial_days" type="number" min="0" max="90" step="1" value="14">
+          </label>
+          <label class="check-field">
+            <input name="discount_enabled" type="checkbox">
+            <span>تفعيل خصم على الباقات</span>
+          </label>
+          <label>
+            <span>نسبة الخصم</span>
+            <input name="discount_percent" type="number" min="0" max="90" step="1" value="0">
+          </label>
+          <label>
+            <span>عنوان الخصم</span>
+            <input name="discount_label" placeholder="مثال: عرض الإطلاق">
+          </label>
+          <label class="full">
+            <span>ملاحظة الخصم</span>
+            <textarea name="discount_note" placeholder="مثال: الخصم متاح لأول 10 ملاك في التجربة المغلقة"></textarea>
+          </label>
+          <div class="actions full">
+            <button type="submit">حفظ التسعير</button>
+            <span class="settings-status" id="pricingStatus">لم يتم تحميل التسعير بعد.</span>
+          </div>
+        </form>
+      </details>
+    </section>
+
+    <section class="grid">
+      <details class="panel span-12 admin-section" id="verificationPanel">
+        <summary class="panel-head">
           <h2>طلبات توثيق الملاك</h2>
           <span>اعتماد، رفض، أو طلب معلومات إضافية لحسابات Supabase Auth</span>
-        </div>
+        </summary>
         <div class="stack" id="verificationList"></div>
-      </article>
+      </details>
     </section>
 
     <section class="grid">
-      <article class="panel span-7">
-        <div class="panel-head">
+      <details class="panel span-7 admin-section" id="leadsPanel">
+        <summary class="panel-head">
           <h2>طلبات الملاك</h2>
           <span>طلبات تواصل مختصرة فقط</span>
-        </div>
+        </summary>
         <div class="stack" id="leadsList"></div>
-      </article>
+      </details>
 
-      <article class="panel span-5">
-        <div class="panel-head">
+      <details class="panel span-5 admin-section" id="ownersPanel">
+        <summary class="panel-head">
           <h2>تجارب 14 يوم</h2>
           <span>تنبيه، إيقاف، أو تسجيل اشتراك</span>
-        </div>
+        </summary>
         <div class="stack" id="ownersList"></div>
-      </article>
+      </details>
     </section>
 
     <section class="grid">
-      <article class="panel span-6">
-        <div class="panel-head">
+      <details class="panel span-6 admin-section" id="propertiesPanel">
+        <summary class="panel-head">
           <h2>روابط العقارات</h2>
           <span>طلبات توثيق، اعتماد، رفض، ونشر</span>
-        </div>
+        </summary>
         <div class="stack" id="propertiesList"></div>
-      </article>
+      </details>
 
-      <article class="panel span-6">
-        <div class="panel-head">
+      <details class="panel span-6 admin-section" id="bookingsPanel">
+        <summary class="panel-head">
           <h2>طلبات الحجز</h2>
           <span>قبول، دفع، تأكيد، أو إلغاء</span>
-        </div>
+        </summary>
         <div class="stack" id="bookingsList"></div>
-      </article>
+      </details>
     </section>
   </main>
 
   <div class="toast" id="toast"></div>
-  <script src="admin.js"></script>
+  <script src="admin.js?v=20260709-donut"></script>
 </body>
 </html>

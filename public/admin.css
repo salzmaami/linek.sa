@@ -176,7 +176,7 @@ h2 {
 .card small,
 .token-card small,
 .toolbar span,
-.metrics span {
+.metric-card span {
   color: var(--muted);
 }
 
@@ -230,7 +230,7 @@ textarea {
   margin: 24px 0;
 }
 
-.metrics article,
+.metric-card,
 .panel,
 .toolbar {
   border: 1px solid #e3e0e9;
@@ -238,15 +238,68 @@ textarea {
   box-shadow: 0 24px 60px rgba(62,48,120,.09);
 }
 
-.metrics article {
-  border-radius: 28px;
-  padding: 28px;
+.metric-card {
+  --metric-color: var(--purple);
+  --metric-angle: 0deg;
+  min-height: 168px;
+  border-radius: 24px;
+  padding: 18px 14px;
+  color: var(--ink);
+  text-align: center;
+  box-shadow: 0 12px 26px rgba(62,48,120,.07);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
-.metrics b {
+.metric-card:hover {
+  border-color: rgba(123,53,244,.38);
+  transform: translateY(-1px);
+}
+
+.metric-card.metric-success { --metric-color: #20b36b; }
+.metric-card.metric-warn { --metric-color: #f4a62a; }
+.metric-card.metric-danger { --metric-color: #d64a55; }
+.metric-card.metric-info { --metric-color: #328cfa; }
+
+.metric-ring {
+  position: relative;
+  width: 102px;
+  height: 102px;
+  border-radius: 50%;
+  background:
+    conic-gradient(var(--metric-color) var(--metric-angle), #ece8f5 0deg);
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 0 1px rgba(5,5,13,.04);
+}
+
+.metric-ring:before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(5,5,13,.05);
+}
+
+.metric-ring b {
+  position: relative;
+  z-index: 1;
   display: block;
-  font-size: 48px;
+  font-size: 32px;
   line-height: 1;
+  color: var(--ink);
+}
+
+.metric-label {
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 .toolbar {
@@ -272,20 +325,62 @@ textarea {
 .span-12 { grid-column: span 12; }
 
 .panel {
-  border-radius: 36px;
-  padding: 30px;
+  border-radius: 24px;
+  padding: 0;
+  overflow: hidden;
 }
 
 .panel-head {
   display: flex;
   justify-content: space-between;
   gap: 18px;
-  align-items: baseline;
-  margin-bottom: 22px;
+  align-items: center;
+  min-height: 92px;
+  padding: 22px 26px;
+  margin-bottom: 0;
+  cursor: pointer;
 }
 
 .panel-head h2 {
   margin: 0;
+  font-size: 28px;
+}
+
+.panel-head span {
+  text-align: end;
+}
+
+.admin-section > summary {
+  list-style: none;
+}
+
+.admin-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-section > summary:after {
+  content: "فتح";
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--purple);
+  background: var(--soft);
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-section[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-section[open] > summary:after {
+  content: "إغلاق";
+}
+
+.admin-section > .stack,
+.admin-section > .settings-form {
+  padding: 22px 26px 26px;
 }
 
 .stack {
@@ -384,6 +479,39 @@ textarea {
   flex-wrap: wrap;
 }
 
+.settings-form {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.settings-form .full {
+  grid-column: 1 / -1;
+}
+
+.check-field {
+  min-height: 56px;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  align-content: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #dcd9e3;
+  border-radius: 12px;
+  background: #faf9fb;
+}
+
+.check-field input {
+  width: 20px;
+  height: 20px;
+}
+
+.settings-status {
+  align-self: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .empty {
   border: 1px dashed #dcd9e3;
   border-radius: 22px;
@@ -420,10 +548,15 @@ textarea {
   }
 
   .hero,
-  .metrics,
   .grid,
-  .fields {
+  .fields,
+  .settings-form {
     grid-template-columns: 1fr;
+  }
+
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }
 
   .span-7,
@@ -448,9 +581,49 @@ textarea {
   }
 
   .panel,
-  .metrics article {
-    border-radius: 28px;
-    padding: 22px;
+  .metric-card {
+    border-radius: 22px;
+  }
+
+  .metric-card {
+    min-height: 142px;
+    padding: 14px 10px;
+  }
+
+  .metric-ring {
+    width: 84px;
+    height: 84px;
+  }
+
+  .metric-ring:before {
+    inset: 10px;
+  }
+
+  .metric-ring b {
+    font-size: 26px;
+  }
+
+  .metric-label {
+    font-size: 13px;
+  }
+
+  .panel-head {
+    min-height: 74px;
+    padding: 18px;
+    gap: 12px;
+  }
+
+  .panel-head h2 {
+    font-size: 24px;
+  }
+
+  .panel-head span {
+    font-size: 14px;
+  }
+
+  .admin-section > .stack,
+  .admin-section > .settings-form {
+    padding: 18px;
   }
 
   .toolbar {

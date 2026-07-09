@@ -1,11 +1,88 @@
 const state = {
   token: sessionStorage.getItem('linek_admin_token') || '',
-  data: {leads: [], owners: [], properties: [], bookings: [], ownerProfiles: [], verificationRequests: []}
+  data: {leads: [], owners: [], properties: [], bookings: [], ownerProfiles: [], verificationRequests: [], siteSettings: null}
+};
+
+const DEFAULT_PRICING = {
+  single_price: 199,
+  multi_price: 299,
+  custom_label: 'تواصل معنا',
+  discount_enabled: false,
+  discount_percent: 0,
+  discount_label: '',
+  discount_note: '',
+  trial_days: 14
 };
 
 const tokenInput = document.getElementById('adminToken');
 const statusLine = document.getElementById('statusLine');
 const toast = document.getElementById('toast');
+let pricingForm = document.getElementById('pricingForm');
+let pricingStatus = document.getElementById('pricingStatus');
+
+function ensurePricingSection() {
+  pricingForm = document.getElementById('pricingForm');
+  pricingStatus = document.getElementById('pricingStatus');
+
+  if (pricingForm) return;
+
+  const toolbar = document.querySelector('.toolbar');
+  if (!toolbar) return;
+
+  const section = document.createElement('section');
+  section.className = 'grid';
+  section.innerHTML = `
+    <details class="panel span-12 admin-section" id="pricingPanel" open>
+      <summary class="panel-head">
+        <h2>تسعير الموقع والخصومات</h2>
+        <span>تظهر هذه القيم تلقائياً في الصفحة الرئيسية بعد الحفظ</span>
+      </summary>
+      <form class="settings-form" id="pricingForm">
+        <label>
+          <span>سعر الباقة الأساسية</span>
+          <input name="single_price" type="number" min="0" step="1" value="199">
+        </label>
+        <label>
+          <span>سعر باقة النمو</span>
+          <input name="multi_price" type="number" min="0" step="1" value="299">
+        </label>
+        <label>
+          <span>نص الباقة المخصصة</span>
+          <input name="custom_label" value="تواصل معنا">
+        </label>
+        <label>
+          <span>مدة التجربة بالأيام</span>
+          <input name="trial_days" type="number" min="0" max="90" step="1" value="14">
+        </label>
+        <label class="check-field">
+          <input name="discount_enabled" type="checkbox">
+          <span>تفعيل خصم على الباقات</span>
+        </label>
+        <label>
+          <span>نسبة الخصم</span>
+          <input name="discount_percent" type="number" min="0" max="90" step="1" value="0">
+        </label>
+        <label>
+          <span>عنوان الخصم</span>
+          <input name="discount_label" placeholder="مثال: عرض الإطلاق">
+        </label>
+        <label class="full">
+          <span>ملاحظة الخصم</span>
+          <textarea name="discount_note" placeholder="مثال: الخصم متاح لأول 10 ملاك في التجربة المغلقة"></textarea>
+        </label>
+        <div class="actions full">
+          <button type="submit">حفظ التسعير</button>
+          <span class="settings-status" id="pricingStatus">لم يتم تحميل التسعير بعد.</span>
+        </div>
+      </form>
+    </details>
+  `;
+  toolbar.insertAdjacentElement('afterend', section);
+  pricingForm = document.getElementById('pricingForm');
+  pricingStatus = document.getElementById('pricingStatus');
+}
+
+ensurePricingSection();
 
 tokenInput.value = state.token;
 
@@ -27,6 +104,46 @@ function escapeHtml(value) {
 
 function money(value) {
   return `${Number(value || 0).toLocaleString('ar-SA')} ر.س`;
+}
+
+function pricing() {
+  return {
+    ...DEFAULT_PRICING,
+    ...(state.data.siteSettings?.pricing || {})
+  };
+}
+
+function setPricingForm() {
+  ensurePricingSection();
+  if (!pricingForm) return;
+  const value = pricing();
+  pricingForm.elements.namedItem('single_price').value = value.single_price;
+  pricingForm.elements.namedItem('multi_price').value = value.multi_price;
+  pricingForm.elements.namedItem('custom_label').value = value.custom_label;
+  pricingForm.elements.namedItem('trial_days').value = value.trial_days;
+  pricingForm.elements.namedItem('discount_enabled').checked = Boolean(value.discount_enabled);
+  pricingForm.elements.namedItem('discount_percent').value = value.discount_percent;
+  pricingForm.elements.namedItem('discount_label').value = value.discount_label || '';
+  pricingForm.elements.namedItem('discount_note').value = value.discount_note || '';
+  const source = state.data.siteSettings?.source === 'fallback' ? 'إعدادات افتراضية' : 'محفوظ في Supabase';
+  if (pricingStatus) {
+    pricingStatus.textContent = `${source}${state.data.siteSettings?.updated_at ? ` · آخر تحديث ${dateText(state.data.siteSettings.updated_at)}` : ''}`;
+  }
+}
+
+function readPricingForm() {
+  ensurePricingSection();
+  const data = Object.fromEntries(new FormData(pricingForm).entries());
+  return {
+    single_price: Number(data.single_price || DEFAULT_PRICING.single_price),
+    multi_price: Number(data.multi_price || DEFAULT_PRICING.multi_price),
+    custom_label: String(data.custom_label || DEFAULT_PRICING.custom_label).trim(),
+    trial_days: Number(data.trial_days || DEFAULT_PRICING.trial_days),
+    discount_enabled: pricingForm.elements.namedItem('discount_enabled').checked,
+    discount_percent: Number(data.discount_percent || 0),
+    discount_label: String(data.discount_label || '').trim(),
+    discount_note: String(data.discount_note || '').trim()
+  };
 }
 
 function dateText(value) {
@@ -100,15 +217,33 @@ async function loadDashboard() {
 }
 
 function setMetrics() {
-  const leads = state.data.leads || [];
   const owners = state.data.owners || [];
-  const bookings = state.data.bookings || [];
+  const properties = state.data.properties || [];
+  const ownerProfiles = state.data.ownerProfiles || [];
   const verificationRequests = state.data.verificationRequests || [];
-  const alerts = owners.filter(owner => owner.trial_needs_alert || owner.trial_expired).length;
-  document.getElementById('metricLeads').textContent = leads.filter(lead => ['new', 'contacted', 'qualified'].includes(lead.status)).length;
-  document.getElementById('metricOwners').textContent = owners.filter(owner => owner.subscription_status === 'trial' && owner.status === 'active').length;
-  document.getElementById('metricAlerts').textContent = verificationRequests.filter(request => request.status === 'submitted').length || alerts;
-  document.getElementById('metricBookings').textContent = bookings.length;
+  const activeSubscriptions = owners.filter(owner => owner.subscription_status === 'active' && owner.status !== 'paused').length;
+  const expiredTrials = owners.filter(owner => owner.subscription_status === 'trial' && owner.trial_expired).length;
+  const cancelledOwners = owners.filter(owner => owner.subscription_status === 'cancelled' || owner.status === 'cancelled').length;
+  const pendingApprovals = [
+    ...ownerProfiles.filter(profile => profile.verification_status === 'pending'),
+    ...verificationRequests.filter(request => request.status === 'submitted'),
+    ...properties.filter(property => ['draft', 'under_review'].includes(property.status))
+  ].length;
+
+  const maxMetric = Math.max(activeSubscriptions, expiredTrials, cancelledOwners, pendingApprovals, 1);
+  setMetricRing('metricActiveSubscriptions', activeSubscriptions, maxMetric);
+  setMetricRing('metricExpiredTrials', expiredTrials, maxMetric);
+  setMetricRing('metricCancelledOwners', cancelledOwners, maxMetric);
+  setMetricRing('metricPendingApprovals', pendingApprovals, maxMetric);
+}
+
+function setMetricRing(id, value, maxValue) {
+  const number = document.getElementById(id);
+  if (!number) return;
+  const safeValue = Number(value || 0);
+  const angle = safeValue === 0 ? 0 : Math.max(42, Math.round((safeValue / maxValue) * 360));
+  number.textContent = safeValue;
+  number.closest('.metric-card')?.style.setProperty('--metric-angle', `${angle}deg`);
 }
 
 function leadBadge(status) {
@@ -377,6 +512,7 @@ function renderBookings() {
 
 function render() {
   setMetrics();
+  setPricingForm();
   renderVerifications();
   renderLeads();
   renderOwners();
@@ -407,6 +543,36 @@ document.getElementById('pauseExpired').addEventListener('click', async () => {
     showToast(`تم إيقاف ${result.length || 0} تجربة منتهية`);
     await loadDashboard();
   } catch (error) {
+    showToast(error.message);
+  }
+});
+
+document.querySelector('.metrics')?.addEventListener('click', event => {
+  const metric = event.target.closest('[data-open-section]');
+  if (!metric) return;
+
+  const section = document.getElementById(metric.dataset.openSection);
+  if (!section) return;
+
+  section.open = true;
+  section.scrollIntoView({behavior: 'smooth', block: 'start'});
+});
+
+document.body.addEventListener('submit', async event => {
+  if (event.target?.id !== 'pricingForm') return;
+  event.preventDefault();
+  ensurePricingSection();
+  try {
+    if (pricingStatus) pricingStatus.textContent = 'جار حفظ التسعير...';
+    const result = await apiPost({
+      action: 'updateSiteSettings',
+      pricing: readPricingForm()
+    });
+    state.data.siteSettings = result;
+    setPricingForm();
+    showToast('تم حفظ التسعير والخصومات');
+  } catch (error) {
+    if (pricingStatus) pricingStatus.textContent = error.message;
     showToast(error.message);
   }
 });
