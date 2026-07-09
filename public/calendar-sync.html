@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Linek | مزامنة iCal</title><link rel="stylesheet" href="app.css"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Linek | ربط التقويم</title><link rel="stylesheet" href="app.css"></head>
 <body>
   <main class="app-shell">
-    <header class="topbar"><a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a><nav><a href="calendar.html">التقويم</a><a class="active" href="calendar-sync.html">iCal</a></nav><button class="button secondary" data-logout type="button">خروج</button></header>
+    <header class="topbar"><a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a><nav><a href="calendar.html">التقويم</a><a class="active" href="calendar-sync.html">ربط التقويم</a></nav><button class="button secondary" data-logout type="button">خروج</button></header>
     <section class="dashboard-grid"><aside class="sidebar" id="sidebar"></aside><div class="stack">
-      <section class="panel"><span class="eyebrow">Calendar Sync</span><h1>مزامنة iCal</h1><p>استورد روابط Airbnb أو Booking.com أو أي منصة iCal. التواريخ المستوردة تُحظر في Linek ولا تعدل يدوياً.</p></section>
-      <section class="panel"><form class="form-grid" id="icalForm"><label class="field"><span>العقار</span><select name="property_id" id="propertySelect"></select></label><label class="field"><span>المنصة</span><select name="platform"><option>Airbnb</option><option>Booking.com</option><option>Vrbo</option><option>Google Calendar</option><option>Apple Calendar</option><option>Other</option></select></label><label class="field full"><span>رابط iCal</span><input name="calendar_url" type="url" required dir="ltr"></label><div class="actions field full"><button class="button" type="submit">حفظ الرابط</button><button class="button secondary" id="copyExport" type="button">نسخ رابط تصدير Linek</button></div></form></section>
+      <section class="panel"><span class="eyebrow">مزامنة التوفر</span><h1>ربط التقويم مع التطبيقات الثانية</h1><p>أضف رابط التقويم من Airbnb أو Booking.com أو أي منصة ثانية. الأيام المحجوزة هناك تنقفل هنا حتى تقل الحجوزات المتعارضة.</p></section>
+      <section class="panel"><form class="form-grid" id="icalForm"><label class="field"><span>العقار</span><select name="property_id" id="propertySelect"></select></label><label class="field"><span>التطبيق أو المنصة</span><select name="platform"><option>Airbnb</option><option>Booking.com</option><option>Vrbo</option><option>Google Calendar</option><option>Apple Calendar</option><option>منصة أخرى</option></select></label><label class="field full"><span>رابط التقويم من التطبيق الآخر</span><input name="calendar_url" type="url" required dir="ltr" placeholder="https://..."><small>انسخ رابط تصدير التقويم من المنصة الثانية والصقه هنا.</small></label><div class="actions field full"><button class="button" type="submit">حفظ الربط</button><button class="button secondary" id="copyExport" type="button">نسخ رابط تقويم Linek</button></div></form></section>
       <section class="panel"><div class="panel-head"><h2>التقويمات المتصلة</h2><button class="button soft" id="manualSync" type="button">مزامنة يدوية</button></div><div class="stack" id="calendarList"></div></section>
     </div></section>
   </main>
@@ -38,7 +38,7 @@
       try {
         await Linek.db('external_calendars', {method: 'POST', body: {property_id: data.property_id, platform: data.platform, calendar_url: data.calendar_url, active: true, sync_status: 'active'}});
         event.currentTarget.reset();
-        Linek.toast('تم حفظ رابط iCal');
+        Linek.toast('تم حفظ رابط التقويم');
         await renderCalendars();
       } catch (error) { Linek.toast(error.message); } finally { Linek.setLoading(button, false); }
     });

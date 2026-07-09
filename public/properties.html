@@ -22,7 +22,7 @@
           <form class="form-grid" id="propertyForm">
             <input type="hidden" name="id">
             <label class="field"><span>اسم العقار</span><input name="title" required minlength="2"></label>
-            <label class="field"><span>Slug</span><input name="slug" required pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$" dir="ltr"></label>
+            <label class="field"><span>اسم الرابط</span><input name="slug" required pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$" dir="ltr" placeholder="مثال: sukoon-riyadh"><small>يظهر داخل رابط الحجز، استخدم حروف إنجليزية وأرقام فقط.</small></label>
             <label class="field"><span>المدينة</span><input name="city" required></label>
             <label class="field"><span>الحي</span><input name="district"></label>
             <label class="field full"><span>العنوان</span><input name="address"></label>
@@ -37,7 +37,15 @@
             <label class="field"><span>الخروج</span><input name="check_out" placeholder="12:00 ظهراً"></label>
             <label class="field full"><span>رابط Google Maps</span><input name="map_link" type="url" dir="ltr"></label>
             <label class="field full"><span>المرافق</span><input name="amenities" placeholder="WiFi, Pool, Kitchen"></label>
-            <label class="field full"><span>روابط الصور</span><textarea name="photos" placeholder="ضع كل رابط صورة في سطر"></textarea></label>
+            <div class="field full">
+              <span>صور العقار</span>
+              <label class="photo-drop">
+                <input id="photoInput" type="file" accept="image/*" multiple>
+                <b>اضغط لاختيار الصور</b>
+                <small>تقدر ترفع أكثر من صورة، وأول صورة تظهر كغلاف صفحة الحجز.</small>
+              </label>
+              <div class="photo-preview-grid" id="photoPreview"></div>
+            </div>
             <label class="field full"><span>سياسة الإلغاء</span><textarea name="cancellation_policy"></textarea></label>
             <label class="field full"><span>تعليمات المكان</span><textarea name="rules"></textarea></label>
             <div class="actions field full"><button class="button" type="submit" data-status="published">نشر العقار</button><button class="button secondary" type="submit" data-status="draft">حفظ مسودة</button></div>
@@ -51,11 +59,49 @@
   <script>
     const form = document.getElementById('propertyForm');
     let context = null;
+    let existingPhotoUrls = [];
+    let selectedPhotoFiles = [];
     document.getElementById('sidebar').innerHTML = OwnerTools.sidebar('properties.html');
     form.elements.title.addEventListener('input', () => {
       if (!form.elements.id.value) form.elements.slug.value = OwnerTools.slugify(form.elements.title.value);
     });
-    document.getElementById('resetForm').addEventListener('click', () => form.reset());
+    function renderPhotoPreview() {
+      const preview = document.getElementById('photoPreview');
+      const existingItems = existingPhotoUrls.map((url, index) => `
+        <figure class="photo-preview-card">
+          <img src="${OwnerTools.escapeHtml(url)}" alt="">
+          <figcaption>${index === 0 ? 'الغلاف الحالي' : 'صورة حالية'}</figcaption>
+          <button type="button" data-remove-existing="${index}">حذف</button>
+        </figure>
+      `);
+      const newItems = selectedPhotoFiles.map((file, index) => `
+        <figure class="photo-preview-card">
+          <img src="${OwnerTools.escapeHtml(URL.createObjectURL(file))}" alt="">
+          <figcaption>${index === 0 && !existingPhotoUrls.length ? 'الغلاف الجديد' : 'صورة جديدة'}</figcaption>
+          <button type="button" data-remove-new="${index}">حذف</button>
+        </figure>
+      `);
+      preview.innerHTML = existingItems.concat(newItems).join('') || '<div class="empty">لم تضف صوراً بعد.</div>';
+      preview.querySelectorAll('[data-remove-existing]').forEach(button => button.addEventListener('click', () => {
+        existingPhotoUrls.splice(Number(button.dataset.removeExisting), 1);
+        renderPhotoPreview();
+      }));
+      preview.querySelectorAll('[data-remove-new]').forEach(button => button.addEventListener('click', () => {
+        selectedPhotoFiles.splice(Number(button.dataset.removeNew), 1);
+        renderPhotoPreview();
+      }));
+    }
+    document.getElementById('photoInput').addEventListener('change', event => {
+      selectedPhotoFiles = selectedPhotoFiles.concat(Array.from(event.currentTarget.files || []));
+      event.currentTarget.value = '';
+      renderPhotoPreview();
+    });
+    document.getElementById('resetForm').addEventListener('click', () => {
+      form.reset();
+      existingPhotoUrls = [];
+      selectedPhotoFiles = [];
+      renderPhotoPreview();
+    });
     async function load() {
       context = await OwnerTools.guard();
       if (!context) return;
@@ -76,7 +122,12 @@
       document.querySelectorAll('[data-edit]').forEach(button => button.addEventListener('click', () => {
         const property = properties.find(item => item.id === button.dataset.edit);
         Object.entries(property).forEach(([key, value]) => { if (form.elements[key]) form.elements[key].value = value ?? ''; });
-        form.elements.photos.value = (property.property_photos || []).map(photo => photo.url).join('\n');
+        existingPhotoUrls = (property.property_photos || [])
+          .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
+          .map(photo => photo.url)
+          .filter(Boolean);
+        selectedPhotoFiles = [];
+        renderPhotoPreview();
         form.scrollIntoView({behavior: 'smooth', block: 'start'});
       }));
     }
@@ -123,13 +174,20 @@
         const path = data.id ? `properties?id=eq.${encodeURIComponent(data.id)}&owner_profile_id=eq.${encodeURIComponent(context.profile.id)}` : 'properties';
         const rows = await Linek.db(path, {method: data.id ? 'PATCH' : 'POST', body});
         const property = rows[0];
-        const photos = data.photos.split(/\n|,/).map(item => item.trim()).filter(Boolean);
+        const uploadedPhotos = [];
+        for (const file of selectedPhotoFiles) {
+          uploadedPhotos.push(await Linek.uploadPublicImage(file, `owner-${context.profile.id}`));
+        }
+        const photos = existingPhotoUrls.concat(uploadedPhotos).filter(Boolean);
         if (data.id) await Linek.db(`property_photos?property_id=eq.${encodeURIComponent(data.id)}`, {method: 'DELETE', prefer: 'return=minimal'});
         if (photos.length) {
           await Linek.db('property_photos', {method: 'POST', body: photos.map((url, index) => ({property_id: property.id, url, sort_order: index, is_cover: index === 0}))});
         }
         Linek.toast('تم حفظ العقار');
         form.reset();
+        existingPhotoUrls = [];
+        selectedPhotoFiles = [];
+        renderPhotoPreview();
         await load();
       } catch (error) {
         Linek.toast(error.message);
@@ -137,6 +195,7 @@
         Linek.setLoading(submitter, false);
       }
     });
+    renderPhotoPreview();
     load();
   </script>
 </body>

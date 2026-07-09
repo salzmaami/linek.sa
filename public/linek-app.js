@@ -260,6 +260,29 @@ const Linek = (() => {
     return `verification-documents/${path}`;
   }
 
+  async function uploadPublicImage(file, folder = 'properties') {
+    if (!file) return null;
+    const cfg = await loadConfig();
+    const session = getSession();
+    const extension = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : 'jpg';
+    const randomId = globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : String(Date.now());
+    const safeName = `${randomId}-${Date.now()}.${extension}`.replace(/[^a-zA-Z0-9._-]/g, '-');
+    const path = `${folder}/${safeName}`;
+    const response = await fetch(`${cfg.supabaseUrl}/storage/v1/object/property-images/${path}`, {
+      method: 'POST',
+      headers: {
+        apikey: cfg.supabaseAnonKey,
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': file.type || 'image/jpeg',
+        'x-upsert': 'false'
+      },
+      body: file
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || 'تعذر رفع الصورة');
+    return `${cfg.supabaseUrl}/storage/v1/object/public/property-images/${path}`;
+  }
+
   function formData(form) {
     return Object.fromEntries(new FormData(form).entries());
   }
@@ -293,6 +316,7 @@ const Linek = (() => {
     latestVerificationRequest,
     requireOwner,
     uploadPrivateFile,
+    uploadPublicImage,
     formData,
     setLoading
   };

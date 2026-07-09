@@ -188,6 +188,71 @@ p, .muted { color: var(--muted); line-height: 1.8; }
   line-height: 1.7;
 }
 .checkline input { margin-top: 7px; }
+.field small {
+  color: var(--muted);
+  line-height: 1.6;
+}
+.photo-drop {
+  min-height: 132px;
+  border: 1px dashed #b9addf;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f6f1ff, #fffefa);
+  display: grid;
+  place-items: center;
+  gap: 5px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+.photo-drop input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.photo-drop b {
+  font-size: 18px;
+}
+.photo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+  gap: 10px;
+}
+.photo-preview-card {
+  position: relative;
+  min-height: 138px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+.photo-preview-card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+.photo-preview-card figcaption {
+  padding: 8px 9px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+.photo-preview-card button {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  min-height: 30px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(184, 50, 50, .92);
+  color: #fff;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
 
 .metric-card, .card {
   border: 1px solid var(--line);
