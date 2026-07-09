@@ -18,11 +18,13 @@ $$;
 create table if not exists public.users (
   id uuid primary key references auth.users(id) on delete cascade,
   email text unique,
-  mobile text unique,
+  mobile text,
   role text not null default 'owner' check (role in ('owner', 'admin')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.users drop constraint if exists users_mobile_key;
 
 create table if not exists public.admin_users (
   user_id uuid primary key references public.users(id) on delete cascade,

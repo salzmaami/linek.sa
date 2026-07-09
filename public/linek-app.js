@@ -126,7 +126,7 @@ const Linek = (() => {
     if (data.user?.id && data.access_token) {
       await db('users', {
         method: 'POST',
-        body: {id: data.user.id, email: payload.email, mobile: payload.mobile, role: 'owner'},
+        body: {id: data.user.id, email: payload.email, mobile: null, role: 'owner'},
         headers: {'Prefer': 'resolution=merge-duplicates,return=representation'}
       });
       await db('owner_profiles', {
@@ -182,7 +182,7 @@ const Linek = (() => {
     const city = clean(metadata.city) || 'غير محدد';
     await db('users', {
       method: 'POST',
-      body: {id: user.id, email: user.email || null, mobile, role: 'owner'},
+      body: {id: user.id, email: user.email || null, mobile: null, role: 'owner'},
       headers: {'Prefer': 'resolution=merge-duplicates,return=representation'}
     });
     const rows = await db('owner_profiles', {
