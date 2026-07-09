@@ -16,17 +16,20 @@
     <section class="hero-panel">
       <div>
         <span class="eyebrow">توثيق المالك</span>
-        <h1>ارفع بيانات التحقق</h1>
-        <p>المطلوب للـ MVP: الهوية الوطنية، صورة شخصية، ورقم واتساب. المستندات الإضافية اختيارية وتساعد في تسريع المراجعة.</p>
+        <h1>بيانات توثيق المالك</h1>
+        <p>نطلب الحد الأدنى لتوثيق مقدم الخدمة وعلاقته بالعقار ووسيلة استلام الأموال. هذه البيانات لا تظهر للضيف.</p>
       </div>
       <form class="panel form-grid" id="verificationForm">
-        <label class="field"><span>الهوية الوطنية</span><input name="national_id_file" type="file" required accept="image/*,.pdf"></label>
-        <label class="field"><span>صورة شخصية</span><input name="selfie_file" type="file" required accept="image/*"></label>
+        <label class="field"><span>رقم الهوية الوطنية</span><input name="national_id_number" required inputmode="numeric" maxlength="10" pattern="^[0-9]{10}$" placeholder="10 أرقام"></label>
         <label class="field"><span>رقم واتساب</span><input name="whatsapp_number" required inputmode="tel" pattern="^05[0-9]{8}$" placeholder="05xxxxxxxx"></label>
-        <label class="field"><span>إثبات الملكية اختياري</span><input name="ownership_document" type="file" accept="image/*,.pdf"></label>
-        <label class="field"><span>IBAN اختياري</span><input name="iban" dir="ltr" maxlength="34"></label>
-        <label class="field"><span>سجل تجاري اختياري</span><input name="commercial_registration" type="file" accept="image/*,.pdf"></label>
+        <label class="field"><span>تاريخ الميلاد</span><input name="date_of_birth" type="date" required></label>
+        <label class="field"><span>العنوان الوطني المختصر</span><input name="national_address_short" required dir="ltr" maxlength="8" pattern="^[A-Za-z]{4}[0-9]{4}$" placeholder="ABCD1234" title="اكتب 4 حروف إنجليزية ثم 4 أرقام"></label>
+        <label class="field"><span>رقم رخصة التصريح السياحي</span><input name="tourism_license_number" required minlength="3" maxlength="80" dir="ltr"></label>
+        <label class="field"><span>IBAN لاستلام الأموال</span><input name="iban" required dir="ltr" maxlength="24" pattern="^[sS][aA][0-9]{22}$" placeholder="SA0000000000000000000000"></label>
+        <label class="field full"><span>إثبات علاقة العقار</span><input name="ownership_document" type="file" required accept="image/*,.pdf"></label>
+        <label class="field full"><span>سجل تجاري إن وجد</span><input name="commercial_registration" type="file" accept="image/*,.pdf"></label>
         <label class="field full"><span>ملاحظات</span><textarea name="notes" placeholder="أي تفاصيل تساعد فريق Linek في المراجعة"></textarea></label>
+        <label class="checkline field full"><input name="owner_declaration_accepted" type="checkbox" required><span>أقر بأن جميع البيانات والمستندات المقدمة صحيحة، وأنني وحدي أتحمل المسؤولية النظامية عن صحة البيانات وحقي في تأجير العقار واستلام أموال الحجوزات، وأفهم أن لاينك بوكنق تقدم خدمة تقنية ومراجعة تشغيلية محدودة دون أي التزام بضمان أو تعويض، وأوافق على شروط استخدام الخدمة.</span></label>
         <div class="actions field full"><button class="button" type="submit">إرسال التوثيق</button><a class="button secondary" href="waiting-approval.html">حالة الطلب</a></div>
       </form>
     </section>
@@ -50,20 +53,21 @@
       try {
         const profile = await Linek.ensureOwnerProfile();
         if (!profile) throw new Error('لم يتم العثور على ملف المالك');
-        const national = await Linek.uploadPrivateFile(form.elements.national_id_file.files[0], `owner-${profile.id}`);
-        const selfie = await Linek.uploadPrivateFile(form.elements.selfie_file.files[0], `owner-${profile.id}`);
         const ownership = await Linek.uploadPrivateFile(form.elements.ownership_document.files[0], `owner-${profile.id}`);
         const commercial = await Linek.uploadPrivateFile(form.elements.commercial_registration.files[0], `owner-${profile.id}`);
         await Linek.db('verification_requests', {
           method: 'POST',
           body: {
             owner_id: profile.id,
-            national_id_file: national,
-            selfie_file: selfie,
+            national_id_number: form.elements.national_id_number.value.trim(),
+            date_of_birth: form.elements.date_of_birth.value,
+            national_address_short: form.elements.national_address_short.value.trim().toUpperCase(),
             whatsapp_number: form.elements.whatsapp_number.value,
             ownership_document: ownership,
-            iban: form.elements.iban.value || null,
+            tourism_license_number: form.elements.tourism_license_number.value.trim(),
+            iban: form.elements.iban.value.trim().toUpperCase(),
             commercial_registration: commercial,
+            owner_declaration_accepted: form.elements.owner_declaration_accepted.checked,
             notes: form.elements.notes.value || null,
             status: 'submitted'
           }

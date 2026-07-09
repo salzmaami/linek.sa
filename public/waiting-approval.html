@@ -11,10 +11,10 @@
     <header class="topbar"><a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a><nav><a class="active" href="waiting-approval.html">انتظار الموافقة</a><a href="verification-status.html">حالة التوثيق</a></nav><button class="button secondary" data-logout type="button">خروج</button></header>
     <section class="hero-panel">
       <div>
-        <span class="eyebrow">تم استلام الطلب</span>
+        <span class="eyebrow">مراجعة Linek</span>
         <h1>طلبك قيد المراجعة</h1>
         <p>سنراجع بياناتك ونرسل لك رسالة واتساب بمجرد اعتماد حسابك. لوحة المالك والعقارات والحجوزات والدفع تبقى مغلقة حتى الاعتماد.</p>
-        <div class="actions"><a class="button secondary" href="index.html">العودة للرئيسية</a><a class="button soft" href="https://wa.me/966570547475" target="_blank" rel="noopener">تواصل مع الدعم</a></div>
+        <div class="actions"><a class="button secondary" href="verification-upload.html">رفع أو تحديث الوثائق</a><a class="button soft" href="https://wa.me/966570547475" target="_blank" rel="noopener">تواصل مع الدعم</a></div>
       </div>
       <div class="panel">
         <div class="status-steps"><span class="active">إنشاء الحساب</span><span class="active">رفع التوثيق</span><span class="active">مراجعة Linek</span><span>فتح اللوحة</span></div>
@@ -37,7 +37,12 @@
       } else if (profile?.verification_status === 'rejected' || profile?.verification_status === 'more_information_required') {
         window.location.href = 'verification-status.html';
       } else {
-        state.textContent = 'حسابك بانتظار مراجعة فريق Linek.';
+        const request = await Linek.latestVerificationRequest(profile.id);
+        if (!request) {
+          window.location.href = 'verification-upload.html';
+          return;
+        }
+        state.textContent = 'وثائقك وصلت. حسابك بانتظار مراجعة فريق Linek.';
       }
     });
   </script>

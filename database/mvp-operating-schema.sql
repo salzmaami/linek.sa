@@ -131,12 +131,17 @@ end $$;
 create table if not exists public.verification_requests (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references public.owner_profiles(id) on delete cascade,
-  national_id_file text not null check (char_length(national_id_file) <= 1200),
-  selfie_file text not null check (char_length(selfie_file) <= 1200),
+  national_id_file text check (national_id_file is null or char_length(national_id_file) <= 1200),
+  selfie_file text check (selfie_file is null or char_length(selfie_file) <= 1200),
+  national_id_number text check (national_id_number is null or national_id_number ~ '^[0-9]{10}$'),
+  date_of_birth date,
+  national_address_short text check (national_address_short is null or national_address_short ~ '^[A-Za-z]{4}[0-9]{4}$'),
   whatsapp_number text not null check (char_length(whatsapp_number) between 7 and 30),
   ownership_document text check (ownership_document is null or char_length(ownership_document) <= 1200),
+  tourism_license_number text check (tourism_license_number is null or char_length(tourism_license_number) between 3 and 80),
   iban text check (iban is null or char_length(iban) <= 34),
   commercial_registration text check (commercial_registration is null or char_length(commercial_registration) <= 1200),
+  owner_declaration_accepted boolean not null default false,
   notes text check (notes is null or char_length(notes) <= 2000),
   status text not null default 'submitted'
     check (status in ('draft', 'submitted', 'approved', 'rejected', 'need_more_information')),
@@ -146,6 +151,29 @@ create table if not exists public.verification_requests (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.verification_requests alter column national_id_file drop not null;
+alter table public.verification_requests alter column selfie_file drop not null;
+alter table public.verification_requests add column if not exists national_id_number text;
+alter table public.verification_requests add column if not exists date_of_birth date;
+alter table public.verification_requests add column if not exists national_address_short text;
+alter table public.verification_requests add column if not exists tourism_license_number text;
+alter table public.verification_requests add column if not exists owner_declaration_accepted boolean not null default false;
+
+alter table public.verification_requests drop constraint if exists verification_requests_national_id_number_check;
+alter table public.verification_requests
+  add constraint verification_requests_national_id_number_check
+  check (national_id_number is null or national_id_number ~ '^[0-9]{10}$');
+
+alter table public.verification_requests drop constraint if exists verification_requests_national_address_short_check;
+alter table public.verification_requests
+  add constraint verification_requests_national_address_short_check
+  check (national_address_short is null or national_address_short ~ '^[A-Za-z]{4}[0-9]{4}$');
+
+alter table public.verification_requests drop constraint if exists verification_requests_tourism_license_number_check;
+alter table public.verification_requests
+  add constraint verification_requests_tourism_license_number_check
+  check (tourism_license_number is null or char_length(tourism_license_number) between 3 and 80);
 
 create table if not exists public.subscriptions (
   id uuid primary key default gen_random_uuid(),
@@ -560,6 +588,31 @@ create table if not exists public.verification_reviews (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.site_settings (
+  key text primary key check (key ~ '^[a-z0-9_-]+$'),
+  value jsonb not null default '{}'::jsonb,
+  is_public boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+insert into public.site_settings (key, value, is_public)
+values (
+  'pricing',
+  jsonb_build_object(
+    'single_price', 199,
+    'multi_price', 299,
+    'custom_label', 'تواصل معنا',
+    'discount_enabled', false,
+    'discount_percent', 0,
+    'discount_label', '',
+    'discount_note', '',
+    'trial_days', 14
+  ),
+  true
+)
+on conflict (key) do nothing;
+
 create index if not exists users_role_idx on public.users (role);
 create index if not exists owner_profiles_user_id_idx on public.owner_profiles (user_id);
 create index if not exists owners_user_id_idx on public.owners (user_id);
@@ -782,12 +835,16 @@ for each row execute function public.set_updated_at();
 drop trigger if exists set_updated_at_audit_logs on public.audit_logs;
 create trigger set_updated_at_audit_logs before update on public.audit_logs
 for each row execute function public.set_updated_at();
+drop trigger if exists set_updated_at_site_settings on public.site_settings;
+create trigger set_updated_at_site_settings before update on public.site_settings
+for each row execute function public.set_updated_at();
 
 grant usage on schema public to anon, authenticated, service_role;
 grant usage, select on sequence public.booking_reference_seq to anon, authenticated, service_role;
 grant select on public.amenities to anon, authenticated;
 grant select on public.properties, public.property_images, public.property_photos to anon;
 grant select on public.availability, public.blocked_dates to anon;
+grant select on public.site_settings to anon, authenticated;
 grant insert on public.bookings, public.booking_page_visits to anon;
 grant select, insert, update, delete on
   public.users,
@@ -809,7 +866,8 @@ grant select, insert, update, delete on
   public.booking_page_visits,
   public.notifications,
   public.support_tickets,
-  public.audit_logs
+  public.audit_logs,
+  public.site_settings
 to authenticated;
 grant all on all tables in schema public to service_role;
 grant execute on function public.expire_pending_bookings() to service_role;
@@ -837,6 +895,18 @@ alter table public.notifications enable row level security;
 alter table public.support_tickets enable row level security;
 alter table public.audit_logs enable row level security;
 alter table public.verification_reviews enable row level security;
+alter table public.site_settings enable row level security;
+
+drop policy if exists "Public read public site settings" on public.site_settings;
+create policy "Public read public site settings" on public.site_settings
+for select to anon, authenticated
+using (is_public = true or public.current_user_is_admin());
+
+drop policy if exists "Admins manage site settings" on public.site_settings;
+create policy "Admins manage site settings" on public.site_settings
+for all to authenticated
+using (public.current_user_is_admin())
+with check (public.current_user_is_admin());
 
 drop policy if exists "Users read own row" on public.users;
 create policy "Users read own row" on public.users

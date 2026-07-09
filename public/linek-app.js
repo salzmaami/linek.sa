@@ -205,8 +205,14 @@ const Linek = (() => {
     const rows = await db(`verification_requests?select=*&owner_id=eq.${encodeURIComponent(ownerId)}&order=created_at.desc&limit=10`);
     return rows.find(request =>
       request.status === 'submitted' &&
-      clean(request.national_id_file) &&
-      clean(request.selfie_file)
+      clean(request.national_id_number) &&
+      clean(request.whatsapp_number) &&
+      clean(request.date_of_birth) &&
+      clean(request.national_address_short) &&
+      clean(request.ownership_document) &&
+      clean(request.tourism_license_number) &&
+      clean(request.iban) &&
+      request.owner_declaration_accepted === true
     ) || null;
   }
 

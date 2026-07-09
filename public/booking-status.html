@@ -9,20 +9,47 @@
 <body>
   <main class="app-shell">
     <header class="topbar"><a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a><nav><a href="index.html">الرئيسية</a><a class="active" href="booking-status.html">حالة الحجز</a></nav></header>
-    <section class="hero-panel">
-      <div>
+    <section class="hero-panel booking-status-hero">
+      <div class="status-copy">
         <span class="eyebrow">حالة الطلب</span>
         <h1 id="statusTitle">جار تحميل الطلب</h1>
         <p id="statusMessage">نراجع حالة طلبك الآن.</p>
-        <div class="countdown-card notice warn"><b id="timer">--:--</b><br><small>الوقت المتبقي لموافقة المالك</small></div>
+        <div class="timer-ring-card" id="timerCard">
+          <div class="timer-ring">
+            <b id="timer">--:--</b>
+            <span>متبقي</span>
+          </div>
+          <div>
+            <strong>الوقت المتبقي لموافقة المالك</strong>
+            <small id="timerNote">إذا انتهت المهلة يرجع التاريخ متاحاً للحجز.</small>
+          </div>
+        </div>
         <div class="actions" id="guestActions"></div>
       </div>
-      <div class="panel">
-        <div class="status-steps" id="steps"><span data-step="submitted">إرسال الطلب</span><span data-step="pending">بانتظار المالك</span><span data-step="confirmed">مؤكد</span><span data-step="final">نهائي</span></div>
-        <div class="stack" id="bookingSummary"></div>
+      <div class="panel flow-panel">
+        <span class="eyebrow">مسار الطلب</span>
+        <div class="status-steps flow-steps" id="steps">
+          <span data-step="submitted"><i>1</i><b>إرسال الطلب</b><small>وصلت البيانات</small></span>
+          <span data-step="pending"><i>2</i><b>بانتظار المالك</b><small>مراجعة التوفر</small></span>
+          <span data-step="confirmed"><i>3</i><b>مؤكد</b><small>تمت الموافقة</small></span>
+          <span data-step="final"><i>4</i><b>نهائي</b><small>اكتملت الحالة</small></span>
+        </div>
       </div>
     </section>
-    <section class="panel"><div class="panel-head"><h2>سجل الطلب</h2></div><div class="stack" id="eventsList"></div></section>
+    <section class="panel ticket-panel">
+      <div class="panel-head ticket-head">
+        <div>
+          <span class="eyebrow">تذكرة الحجز</span>
+          <h2>سجل الطلب</h2>
+        </div>
+        <b id="ticketRef">--</b>
+      </div>
+      <div class="ticket-details" id="bookingSummary"></div>
+      <div class="ticket-events">
+        <h3>حركة الطلب</h3>
+        <div class="event-timeline" id="eventsList"></div>
+      </div>
+    </section>
   </main>
   <div class="toast" id="toast"></div>
   <script>
@@ -39,28 +66,52 @@
         cancelled: ['تم إلغاء الحجز', 'هذا الطلب لم يعد نشطاً.']
       }[status] || ['حالة الطلب', status];
     }
+    function updateTimerUi(value, progress, note) {
+      document.getElementById('timer').textContent = value;
+      document.getElementById('timerCard').style.setProperty('--timer-progress', `${Math.max(0, Math.min(360, progress))}deg`);
+      document.getElementById('timerNote').textContent = note;
+    }
     function renderTimer() {
       if (!booking || booking.status !== 'pending') {
-        document.getElementById('timer').textContent = booking?.status === 'confirmed' ? 'مقبول' : '00:00';
+        updateTimerUi(
+          booking?.status === 'confirmed' ? 'مقبول' : '00:00',
+          booking?.status === 'confirmed' ? 360 : 0,
+          booking?.status === 'confirmed' ? 'وافق المالك على الطلب.' : 'لا توجد مهلة نشطة لهذا الطلب.'
+        );
         return;
       }
       const remaining = new Date(booking.expires_at).getTime() - Date.now();
       if (remaining <= 0) {
-        document.getElementById('timer').textContent = '00:00';
+        updateTimerUi('00:00', 0, 'انتهت المهلة وسيتم تحديث حالة الطلب.');
         load();
         return;
       }
       const total = Math.floor(remaining / 1000);
-      document.getElementById('timer').textContent = `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+      const expiresAt = new Date(booking.expires_at).getTime();
+      const createdAt = booking.created_at ? new Date(booking.created_at).getTime() : expiresAt - (30 * 60 * 1000);
+      const windowMs = Math.max(expiresAt - createdAt, 1);
+      const progress = (remaining / windowMs) * 360;
+      updateTimerUi(
+        `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`,
+        progress,
+        'ننتظر موافقة المالك قبل إظهار خطوة الدفع.'
+      );
     }
     function render(data) {
       booking = data.booking;
       const copy = statusCopy(booking.status);
+      const activeSteps = {
+        pending: ['submitted', 'pending'],
+        confirmed: ['submitted', 'pending', 'confirmed'],
+        rejected: ['submitted', 'pending', 'final'],
+        expired: ['submitted', 'pending', 'final'],
+        cancelled: ['submitted', 'pending', 'final']
+      }[booking.status] || ['submitted'];
+      document.getElementById('ticketRef').textContent = booking.reference || booking.public_code || '--';
       document.getElementById('statusTitle').textContent = copy[0];
       document.getElementById('statusMessage').textContent = copy[1];
       document.querySelectorAll('#steps span').forEach(step => {
-        const key = step.dataset.step;
-        step.classList.toggle('active', key === 'submitted' || key === booking.status || (key === 'pending' && booking.status === 'pending') || (key === 'final' && ['rejected', 'expired', 'cancelled'].includes(booking.status)));
+        step.classList.toggle('active', activeSteps.includes(step.dataset.step));
       });
       const payment = booking.payment_link_snapshot
         ? `<a class="button" href="${booking.payment_link_snapshot}" target="_blank" rel="noopener">فتح رابط دفع المالك</a>`
@@ -73,9 +124,32 @@
         ['الضيوف', booking.guests_count],
         ['المبلغ التقديري', money(booking.total_price || booking.amount)],
         ['تعليمات الدفع', booking.payment_instructions_snapshot || 'تظهر حسب وسيلة دفع المالك']
-      ].map(([label, value]) => `<div class="card"><small>${label}</small><br><b>${value}</b></div>`).join('');
-      document.getElementById('eventsList').innerHTML = data.events.map(event => `<div class="card"><b>${event.event_type}</b><small>${dateText(event.created_at)} · ${event.notes || ''}</small></div>`).join('') || '<div class="empty">لا توجد أحداث بعد.</div>';
+      ].map(([label, value]) => `<div class="ticket-row"><small>${label}</small><b>${value}</b></div>`).join('');
+      document.getElementById('eventsList').innerHTML = (data.events || []).map(event => `<div class="event-item"><b>${event.event_type}</b><small>${dateText(event.created_at)} · ${event.notes || ''}</small></div>`).join('') || '<div class="empty">لا توجد أحداث بعد.</div>';
       renderTimer();
+    }
+    function demoData() {
+      const now = Date.now();
+      return {
+        booking: {
+          public_code: 'LNK-DEMO-001',
+          reference: 'LNK-DEMO-001',
+          status: 'pending',
+          created_at: new Date(now - (8 * 60 * 1000)).toISOString(),
+          expires_at: new Date(now + (22 * 60 * 1000)).toISOString(),
+          check_in: '2026-07-18',
+          check_out: '2026-07-19',
+          guests_count: 4,
+          total_price: 850,
+          amount: 850,
+          payment_instructions_snapshot: 'تظهر وسيلة الدفع الخاصة بالمالك بعد الموافقة.',
+          properties: {title: 'شاليه سكون', name: 'شاليه سكون'}
+        },
+        events: [
+          {event_type: 'تم إرسال الطلب', created_at: new Date(now - (8 * 60 * 1000)).toISOString(), notes: 'وصل طلب الحجز وينتظر قرار المالك'},
+          {event_type: 'بانتظار موافقة المالك', created_at: new Date(now - (7 * 60 * 1000)).toISOString(), notes: 'المهلة النشطة 30 دقيقة'}
+        ]
+      };
     }
     async function load() {
       const ref = params.get('ref');
@@ -85,7 +159,15 @@
       if (!response.ok) throw new Error(data.error || 'تعذر تحميل الطلب');
       render(data);
     }
-    load().catch(error => { document.getElementById('statusTitle').textContent = 'تعذر تحميل الطلب'; document.getElementById('statusMessage').textContent = error.message; });
+    load().catch(error => {
+      if (location.protocol === 'file:') {
+        render(demoData());
+        return;
+      }
+      document.getElementById('statusTitle').textContent = 'تعذر تحميل الطلب';
+      document.getElementById('statusMessage').textContent = error.message;
+      updateTimerUi('00:00', 0, 'تعذر تحميل المهلة.');
+    });
     setInterval(renderTimer, 1000);
   </script>
 </body>

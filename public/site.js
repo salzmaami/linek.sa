@@ -7,6 +7,16 @@ const LINEK_LEADS_CONFIG = window.LINEK_LEADS_CONFIG || {};
 let setupStep = 1;
 let selectedPlan = 'single';
 let runtimeConfigPromise = null;
+let sitePricing = {
+  single_price: 199,
+  multi_price: 299,
+  custom_label: 'تواصل معنا',
+  discount_enabled: false,
+  discount_percent: 0,
+  discount_label: '',
+  discount_note: '',
+  trial_days: 14
+};
 
 const placeModes = {
   single: {
@@ -29,6 +39,96 @@ function showToast(message) {
   toast.textContent = message;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+function cleanNumber(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(0, Math.round(number)) : fallback;
+}
+
+function sanitizeSitePricing(value = {}) {
+  return {
+    single_price: cleanNumber(value.single_price, 199),
+    multi_price: cleanNumber(value.multi_price, 299),
+    custom_label: String(value.custom_label || 'تواصل معنا').trim() || 'تواصل معنا',
+    discount_enabled: Boolean(value.discount_enabled),
+    discount_percent: Math.max(0, Math.min(90, cleanNumber(value.discount_percent, 0))),
+    discount_label: String(value.discount_label || '').trim(),
+    discount_note: String(value.discount_note || '').trim(),
+    trial_days: Math.max(0, Math.min(90, cleanNumber(value.trial_days, 14)))
+  };
+}
+
+function planBasePrice(plan) {
+  return plan === 'single' ? sitePricing.single_price : sitePricing.multi_price;
+}
+
+function planDisplayPrice(plan) {
+  const base = planBasePrice(plan);
+  if (!sitePricing.discount_enabled || !sitePricing.discount_percent) return base;
+  return Math.round(base * (100 - sitePricing.discount_percent) / 100);
+}
+
+function formatPrice(value, format = 'latin') {
+  return Number(value || 0).toLocaleString(format === 'arabic' ? 'ar-SA' : 'en-US');
+}
+
+function pricingDiscountText(plan) {
+  if (!sitePricing.discount_enabled) return '';
+  const base = planBasePrice(plan);
+  const price = planDisplayPrice(plan);
+  const label = sitePricing.discount_label || 'خصم متاح';
+  if (sitePricing.discount_percent) {
+    return `${label}: قبل الخصم ${formatPrice(base)} ر.س`;
+  }
+  return label;
+}
+
+function applySitePricing() {
+  document.querySelectorAll('[data-price-value]').forEach(element => {
+    const plan = element.dataset.priceValue;
+    element.textContent = formatPrice(planDisplayPrice(plan), element.dataset.numberFormat || 'latin');
+  });
+
+  document.querySelectorAll('[data-discount-note]').forEach(element => {
+    const text = pricingDiscountText(element.dataset.discountNote);
+    element.hidden = !text;
+    element.textContent = text;
+  });
+
+  document.querySelectorAll('[data-custom-label]').forEach(element => {
+    element.textContent = sitePricing.custom_label;
+  });
+
+  document.querySelectorAll('[data-trial-days]').forEach(element => {
+    element.textContent = element.textContent.includes('تجربة')
+      ? `${sitePricing.trial_days} يوم تجربة`
+      : `${sitePricing.trial_days} يوم`;
+  });
+
+  const pricingNote = document.querySelector('[data-pricing-note]');
+  if (pricingNote) {
+    const discount = sitePricing.discount_enabled
+      ? ` ${sitePricing.discount_note || sitePricing.discount_label || `خصم ${sitePricing.discount_percent}% متاح حالياً`}.`
+      : '';
+    pricingNote.textContent = `الأسعار لا تشمل أي التزام ضريبي إن انطبق. Linek يبيع اشتراكًا تقنيًا، ولا يستلم مبالغ حجوزات الضيوف في نموذج البداية.${discount}`;
+  }
+}
+
+async function loadSitePricing() {
+  if (window.location.protocol === 'file:') {
+    applySitePricing();
+    return;
+  }
+  try {
+    const response = await fetch('/api/site-settings', {headers: {Accept: 'application/json'}});
+    if (!response.ok) throw new Error('Site settings failed');
+    const data = await response.json();
+    sitePricing = sanitizeSitePricing(data.pricing);
+  } catch (_) {
+    sitePricing = sanitizeSitePricing(sitePricing);
+  }
+  applySitePricing();
 }
 
 function setSetupStep(step) {
@@ -262,17 +362,17 @@ document.getElementById('submitSetupLead').addEventListener('click', async () =>
   if (!validateSetupStep()) return;
   const button = document.getElementById('submitSetupLead');
   const data = normalizeSetupLeadData();
-  const price = selectedPlan === 'single' ? '١٩٩' : '٣٩٩';
+  const price = formatPrice(planDisplayPrice(selectedPlan), 'arabic');
   const count = selectedPlan === 'single' ? 'مكان واحد' : `${data.places} أماكن`;
   button.disabled = true;
   button.textContent = 'جار حفظ الطلب...';
   try {
     const saveResult = await saveLead(data);
-    document.getElementById('setupSummary').textContent = `${count} · ${price} ر.س شهريًا بعد تجربة 14 يوم · ${saveResult.saved ? 'تم حفظ الطلب' : 'أرسل نسخة واتساب للتأكيد'}`;
+    document.getElementById('setupSummary').textContent = `${count} · ${price} ر.س شهريًا بعد تجربة ${sitePricing.trial_days} يوم · ${saveResult.saved ? 'تم حفظ الطلب' : 'أرسل نسخة واتساب للتأكيد'}`;
     showToast(saveResult.saved ? 'تم حفظ طلب البداية' : 'تم تجهيز الطلب');
     setSetupStep(3);
   } catch (_) {
-    document.getElementById('setupSummary').textContent = `${count} · ${price} ر.س شهريًا بعد تجربة 14 يوم · تعذر الحفظ`;
+    document.getElementById('setupSummary').textContent = `${count} · ${price} ر.س شهريًا بعد تجربة ${sitePricing.trial_days} يوم · تعذر الحفظ`;
     showToast('تعذر حفظ الطلب، استخدم نموذج التواصل');
     setSetupStep(3);
   } finally {
@@ -282,7 +382,7 @@ document.getElementById('submitSetupLead').addEventListener('click', async () =>
 });
 
 document.querySelector('.setup-back').addEventListener('click', () => setSetupStep(1));
-document.getElementById('viewProduct').addEventListener('click', () => document.getElementById('product').scrollIntoView({behavior: 'smooth'}));
+document.getElementById('viewProduct')?.addEventListener('click', () => document.getElementById('product').scrollIntoView({behavior: 'smooth'}));
 document.getElementById('contactForm').addEventListener('submit', async event => {
   event.preventDefault();
   const form = event.currentTarget;
@@ -307,14 +407,16 @@ document.getElementById('contactForm').addEventListener('submit', async event =>
     showToast('تعذر حفظ الطلب، أرسل نسخة واتساب');
   } finally {
     submitButton.disabled = false;
-    submitButton.textContent = 'جهّز طلب البداية';
+    submitButton.textContent = 'أرسل الاستفسار';
   }
 
   renderLeadSummary(summary, data, saveResult);
 });
 document.querySelector('.custom-plan a').addEventListener('click', () => {
-  document.querySelector('#contactForm select[name="topic"]').selectedIndex = 2;
+  document.querySelector('#contactForm select[name="topic"]').selectedIndex = 0;
 });
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape') closeSetup();
 });
+
+loadSitePricing();

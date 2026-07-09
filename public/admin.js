@@ -502,6 +502,21 @@ function renderVerifications() {
   list.innerHTML = profiles.map(profile => {
     const request = latestRequestForProfile(profile.id);
     const whatsapp = whatsappLink(profile.whatsapp_number, `مرحباً ${profile.full_name || ''}،\nتم تحديث حالة توثيق حسابك في Linek: ${profileStatusLabel(profile.verification_status)}.`);
+    const verificationDetails = request ? [
+      `رقم الهوية: ${request.national_id_number || '-'}`,
+      `تاريخ الميلاد: ${dateText(request.date_of_birth)}`,
+      `واتساب: ${request.whatsapp_number || '-'}`,
+      `العنوان الوطني المختصر: ${request.national_address_short || '-'}`,
+      `رقم التصريح السياحي: ${request.tourism_license_number || '-'}`,
+      `IBAN: ${request.iban || '-'}`,
+      `الإقرار: ${request.owner_declaration_accepted ? 'موافق' : 'غير مكتمل'}`
+    ].join('\n') : 'لا توجد بيانات توثيق بعد';
+    const verificationFiles = [
+      request?.ownership_document && `إثبات علاقة العقار: ${request.ownership_document}`,
+      request?.commercial_registration && `السجل التجاري: ${request.commercial_registration}`,
+      request?.national_id_file && `ملف هوية قديم: ${request.national_id_file}`,
+      request?.selfie_file && `سيلفي قديم: ${request.selfie_file}`
+    ].filter(Boolean).join('\n') || 'لم ترفع ملفات بعد';
     return `
       <details class="card" data-profile-card="${escapeHtml(profile.id)}">
         <summary class="card-head">
@@ -514,12 +529,8 @@ function renderVerifications() {
         <div class="fields">
           <label><span>النشاط</span><input value="${escapeHtml(profile.business_name || '-')}" readonly></label>
           <label><span>حالة الطلب</span><input value="${escapeHtml(request?.status || 'لا يوجد طلب مرفوع')}" readonly></label>
-          <label class="full"><span>ملفات التوثيق</span><textarea readonly dir="ltr">${escapeHtml([
-            request?.national_id_file,
-            request?.selfie_file,
-            request?.ownership_document,
-            request?.commercial_registration
-          ].filter(Boolean).join('\n') || 'لم ترفع ملفات بعد')}</textarea></label>
+          <label class="full"><span>بيانات التوثيق</span><textarea readonly dir="ltr">${escapeHtml(verificationDetails)}</textarea></label>
+          <label class="full"><span>ملفات التوثيق</span><textarea readonly dir="ltr">${escapeHtml(verificationFiles)}</textarea></label>
           <label class="full"><span>ملاحظات المالك</span><textarea readonly>${escapeHtml(request?.notes || '-')}</textarea></label>
           <label class="full"><span>سبب القرار</span><textarea data-field="verification_reason" placeholder="يظهر للمالك عند الرفض أو طلب معلومات إضافية">${escapeHtml(profile.rejection_reason || '')}</textarea></label>
         </div>

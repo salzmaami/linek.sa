@@ -50,7 +50,7 @@ const BookingPage = (() => {
     const photos = (property.property_photos || []).sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
     document.getElementById('guestImage').src = photos[0]?.url || fallbackImage;
     setText('guestPlaceName', property.title || property.name);
-    setText('guestDescription', property.description || 'صفحة حجز موثقة من Linek.');
+    setText('guestDescription', property.description || 'صفحة حجز موثقة من لاينك بوكنق.');
     setText('guestCity', property.city || '-');
     setText('guestType', property.property_type || 'شاليه');
     setText('guestStayType', `${property.guests || 1} ضيف`);
@@ -61,7 +61,7 @@ const BookingPage = (() => {
     setText('guestRules', property.rules || 'تحدد حسب تعليمات المالك.');
     setText('selectedPrice', money(property.base_price));
     document.getElementById('guestMapLink').href = property.map_link || '#';
-    document.getElementById('merchantWhatsApp').href = whatsappHref('', `السلام عليكم، لدي استفسار بخصوص الحجز عبر Linek: ${location.href}`);
+    document.getElementById('merchantWhatsApp').href = whatsappHref('', `السلام عليكم، لدي استفسار بخصوص الحجز عبر لاينك بوكنق: ${location.href}`);
     document.getElementById('guestCount').max = property.guests || 1;
     document.getElementById('calendarFreshness').textContent = property.calendar_last_synced_at ? `تم تحديث التقويم ${dateLabel(property.calendar_last_synced_at)}` : 'التقويم بانتظار أول مزامنة';
   }

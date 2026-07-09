@@ -63,9 +63,9 @@ function renderSummary() {
 
   document.getElementById('paymentMerchantWhatsApp').href = whatsappHref(
     booking.merchantWhatsapp,
-    `السلام عليكم، عندي طلب حجز رقم ${booking.id} عبر Linek`
+    `السلام عليكم، عندي طلب حجز رقم ${booking.id} عبر لاينك بوكنق`
   );
-  document.getElementById('paymentLinekWhatsApp').href = `https://wa.me/${linekWhatsapp}?text=${encodeURIComponent(`عندي استفسار عن طلب ${booking.id} في Linek`)}`;
+  document.getElementById('paymentLinekWhatsApp').href = `https://wa.me/${linekWhatsapp}?text=${encodeURIComponent(`عندي استفسار عن طلب ${booking.id} في لاينك بوكنق`)}`;
 }
 
 function renderTimer() {

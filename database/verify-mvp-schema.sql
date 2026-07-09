@@ -24,7 +24,8 @@ with required_tables(table_name) as (
     ('notifications'),
     ('support_tickets'),
     ('audit_logs'),
-    ('verification_reviews')
+    ('verification_reviews'),
+    ('site_settings')
 )
 select
   'tables' as check_group,
@@ -50,8 +51,18 @@ with required_columns(table_name, column_name) as (
     ('bookings', 'expires_at'),
     ('bookings', 'payment_link_snapshot'),
     ('owner_profiles', 'verification_status'),
+    ('verification_requests', 'national_id_number'),
+    ('verification_requests', 'date_of_birth'),
+    ('verification_requests', 'national_address_short'),
+    ('verification_requests', 'ownership_document'),
+    ('verification_requests', 'tourism_license_number'),
+    ('verification_requests', 'iban'),
+    ('verification_requests', 'commercial_registration'),
+    ('verification_requests', 'owner_declaration_accepted'),
     ('owner_payment_methods', 'payment_provider'),
-    ('external_calendars', 'calendar_url')
+    ('external_calendars', 'calendar_url'),
+    ('site_settings', 'value'),
+    ('site_settings', 'is_public')
 )
 select
   'columns' as check_group,
@@ -127,7 +138,8 @@ where schemaname = 'public'
     'notifications',
     'support_tickets',
     'audit_logs',
-    'verification_reviews'
+    'verification_reviews',
+    'site_settings'
   )
 order by item;
 
