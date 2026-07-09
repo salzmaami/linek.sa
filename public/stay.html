@@ -31,7 +31,6 @@
           </div>
           <div class="hero-actions">
             <button class="pill" id="startBooking" type="button">يلا نبدأ الحجز</button>
-            <a class="pill flat" id="linekWhatsAppIntro" href="https://wa.me/966570547475" target="_blank" rel="noreferrer">واتساب لاينك بوكنق</a>
           </div>
         </div>
       </section>
@@ -88,13 +87,33 @@
           <form class="panel" id="bookingForm">
             <span class="eyebrow">طلب حجز</span>
             <h2>اختر التواريخ</h2>
-            <label class="field"><span>تاريخ الدخول</span><input id="checkIn" name="check_in" type="date" required /></label>
-            <label class="field"><span>تاريخ الخروج</span><input id="checkOut" name="check_out" type="date" required /></label>
+            <div class="guest-calendar">
+              <div class="calendar-head">
+                <button class="pill ghost calendar-nav" id="prevGuestMonth" type="button">السابق</button>
+                <b id="guestCalendarTitle">-</b>
+                <button class="pill ghost calendar-nav" id="nextGuestMonth" type="button">التالي</button>
+              </div>
+              <div class="calendar-legend">
+                <span><i class="available"></i>متاح</span>
+                <span><i class="selected"></i>اختيارك</span>
+                <span><i class="blocked"></i>غير متاح</span>
+              </div>
+              <div class="guest-calendar-grid" id="guestCalendarGrid"></div>
+            </div>
+            <div class="date-summary-cards">
+              <div><span>الدخول</span><b id="checkInLabel">اختر يوم الدخول</b></div>
+              <div><span>الخروج</span><b id="checkOutLabel">اختر يوم الخروج</b></div>
+            </div>
+            <input id="checkIn" name="check_in" type="hidden" required />
+            <input id="checkOut" name="check_out" type="hidden" required />
             <label class="field"><span>عدد الضيوف</span><input id="guestCount" name="guests_count" type="number" min="1" value="1" required /></label>
             <label class="field"><span>اسم الضيف</span><input id="guestName" name="guest_name" required minlength="2" pattern="^[\u0600-\u06FFa-zA-Z ]{2,}$" placeholder="مثال: سلطان العتيبي" title="اكتب الاسم بحروف فقط، حرفين على الأقل" /></label>
             <label class="field"><span>رقم الجوال</span><input id="guestPhone" name="guest_mobile" required inputmode="tel" pattern="^05[0-9]{8}$" placeholder="05xxxxxxxx" title="اكتب رقم جوال سعودي يبدأ بـ 05 ويتكون من 10 أرقام" /></label>
             <label class="field"><span>ملاحظات اختيارية</span><textarea id="guestNotes" name="notes" placeholder="أي طلب خاص أو وقت وصول متوقع"></textarea></label>
-            <div class="summary-row"><span>السعر</span><b id="selectedPrice">-</b></div>
+            <div class="summary-row"><span>سعر الليلة</span><b id="selectedPrice">-</b></div>
+            <div class="summary-row"><span>عدد الليالي</span><b id="nightsCount">-</b></div>
+            <div class="summary-row"><span>رسوم التنظيف</span><b id="cleaningFee">-</b></div>
+            <div class="summary-row total"><span>الإجمالي</span><b id="totalPrice">-</b></div>
             <div class="summary-row"><span>الحالة التالية</span><b>بانتظار موافقة المالك</b></div>
             <div class="notice" id="bookingReview">اختر التواريخ لعرض ملخص الطلب.</div>
             <div class="notice success" id="calendarFreshness">التقويم قيد التحميل.</div>
