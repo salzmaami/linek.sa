@@ -1,6 +1,17 @@
 const DEFAULT_LIMIT = 80;
 const crypto = require('crypto');
 
+const DEFAULT_PRICING = {
+  single_price: 199,
+  multi_price: 299,
+  custom_label: 'تواصل معنا',
+  discount_enabled: false,
+  discount_percent: 0,
+  discount_label: '',
+  discount_note: '',
+  trial_days: 14
+};
+
 function json(res, status, body) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -24,6 +35,25 @@ function readBody(req) {
 
 function cleanText(value, fallback = '') {
   return String(value ?? fallback).trim();
+}
+
+function clampNumber(value, fallback, min, max) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(min, Math.min(max, Math.round(number)));
+}
+
+function sanitizePricing(value = {}) {
+  return {
+    single_price: clampNumber(value.single_price, DEFAULT_PRICING.single_price, 0, 99999),
+    multi_price: clampNumber(value.multi_price, DEFAULT_PRICING.multi_price, 0, 99999),
+    custom_label: cleanText(value.custom_label, DEFAULT_PRICING.custom_label).slice(0, 80) || DEFAULT_PRICING.custom_label,
+    discount_enabled: Boolean(value.discount_enabled),
+    discount_percent: clampNumber(value.discount_percent, DEFAULT_PRICING.discount_percent, 0, 90),
+    discount_label: cleanText(value.discount_label).slice(0, 80),
+    discount_note: cleanText(value.discount_note).slice(0, 180),
+    trial_days: clampNumber(value.trial_days, DEFAULT_PRICING.trial_days, 0, 90)
+  };
 }
 
 function addDays(date, days) {
@@ -103,13 +133,15 @@ function enrichOwner(owner) {
 }
 
 async function getDashboard(config) {
-  const [leads, owners, properties, bookings, ownerProfiles, verificationRequests] = await Promise.all([
+  const [leads, owners, properties, bookings, ownerProfiles, verificationRequests, subscriptions, siteSettings] = await Promise.all([
     supabase(config, `leads?select=*&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
     supabase(config, `owners?select=*&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
     supabase(config, `properties?select=*,owners(name,phone,subscription_status,trial_ends_at,linek_subscription_payment_link),property_photos(url,sort_order,is_cover)&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
     supabase(config, `bookings?select=*,properties(name,title,slug,owner_id,owner_profile_id,owners(name,phone))&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
     supabase(config, `owner_profiles?select=*&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
-    supabase(config, `verification_requests?select=*&order=created_at.desc&limit=${DEFAULT_LIMIT}`)
+    supabase(config, `verification_requests?select=*&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
+    supabase(config, `subscriptions?select=*&order=created_at.desc&limit=${DEFAULT_LIMIT}`),
+    getSiteSettings(config)
   ]);
 
   return {
@@ -118,7 +150,45 @@ async function getDashboard(config) {
     properties,
     bookings,
     ownerProfiles,
-    verificationRequests
+    verificationRequests,
+    subscriptions,
+    siteSettings
+  };
+}
+
+async function getSiteSettings(config) {
+  try {
+    const rows = await supabase(config, 'site_settings?select=key,value,is_public,updated_at&key=eq.pricing&limit=1');
+    return {
+      pricing: sanitizePricing(rows?.[0]?.value || DEFAULT_PRICING),
+      updated_at: rows?.[0]?.updated_at || null,
+      source: rows?.length ? 'supabase' : 'default'
+    };
+  } catch (error) {
+    return {
+      pricing: sanitizePricing(DEFAULT_PRICING),
+      updated_at: null,
+      source: 'fallback',
+      warning: error.message
+    };
+  }
+}
+
+async function updateSiteSettings(config, body) {
+  const pricing = sanitizePricing(body.pricing || body);
+  const rows = await supabase(config, 'site_settings?on_conflict=key', {
+    method: 'POST',
+    prefer: 'resolution=merge-duplicates,return=representation',
+    body: {
+      key: 'pricing',
+      value: pricing,
+      is_public: true
+    }
+  });
+  return {
+    pricing: sanitizePricing(rows?.[0]?.value || pricing),
+    updated_at: rows?.[0]?.updated_at || null,
+    source: 'supabase'
   };
 }
 
@@ -430,7 +500,8 @@ async function handler(req, res) {
       updateProperty,
       updateBooking,
       updateVerification,
-      pauseExpiredTrials
+      pauseExpiredTrials,
+      updateSiteSettings
     };
 
     if (!actions[action]) return json(res, 400, {error: 'Unknown action'});

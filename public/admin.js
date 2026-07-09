@@ -1,6 +1,6 @@
 const state = {
   token: sessionStorage.getItem('linek_admin_token') || '',
-  data: {leads: [], owners: [], properties: [], bookings: [], ownerProfiles: [], verificationRequests: [], siteSettings: null}
+  data: {leads: [], owners: [], properties: [], bookings: [], ownerProfiles: [], verificationRequests: [], subscriptions: [], siteSettings: null}
 };
 
 const DEFAULT_PRICING = {
@@ -104,6 +104,12 @@ function escapeHtml(value) {
 
 function money(value) {
   return `${Number(value || 0).toLocaleString('ar-SA')} ر.س`;
+}
+
+function compactMoney(value) {
+  const number = Number(value || 0);
+  if (number >= 1000) return `${(number / 1000).toLocaleString('ar-SA', {maximumFractionDigits: 1})} ألف`;
+  return `${number.toLocaleString('ar-SA')} ر.س`;
 }
 
 function pricing() {
@@ -217,32 +223,81 @@ async function loadDashboard() {
 }
 
 function setMetrics() {
+  const leads = state.data.leads || [];
   const owners = state.data.owners || [];
   const properties = state.data.properties || [];
   const ownerProfiles = state.data.ownerProfiles || [];
   const verificationRequests = state.data.verificationRequests || [];
-  const activeSubscriptions = owners.filter(owner => owner.subscription_status === 'active' && owner.status !== 'paused').length;
-  const expiredTrials = owners.filter(owner => owner.subscription_status === 'trial' && owner.trial_expired).length;
-  const cancelledOwners = owners.filter(owner => owner.subscription_status === 'cancelled' || owner.status === 'cancelled').length;
+  const subscriptions = state.data.subscriptions || [];
+  const pricingValue = pricing();
+  const subscriptionPlanPrice = plan => {
+    if (['multi', 'professional'].includes(plan)) return Number(pricingValue.multi_price || DEFAULT_PRICING.multi_price);
+    if (plan === 'custom') return 0;
+    return Number(pricingValue.single_price || DEFAULT_PRICING.single_price);
+  };
+  const activeSubscriptionKeys = new Set();
+  const activeSubscriptionsFromOwners = owners.filter(owner => owner.subscription_status === 'active' && owner.status === 'active');
+  const activeSubscriptionsFromTable = subscriptions.filter(subscription => subscription.status === 'active');
+  activeSubscriptionsFromOwners.forEach(owner => activeSubscriptionKeys.add(owner.owner_profile_id || owner.user_id || owner.id));
+  activeSubscriptionsFromTable.forEach(subscription => activeSubscriptionKeys.add(subscription.owner_id || subscription.id));
+  const activeSubscriptions = activeSubscriptionKeys.size;
+  const expiredKeys = new Set();
+  owners
+    .filter(owner => owner.subscription_status === 'expired' || (owner.subscription_status === 'trial' && owner.trial_expired))
+    .forEach(owner => expiredKeys.add(owner.owner_profile_id || owner.user_id || owner.id));
+  subscriptions
+    .filter(subscription => subscription.status === 'expired')
+    .forEach(subscription => expiredKeys.add(subscription.owner_id || subscription.id));
+  const expiredTrials = expiredKeys.size;
+  const cancelledKeys = new Set();
+  owners
+    .filter(owner => owner.subscription_status === 'cancelled')
+    .forEach(owner => cancelledKeys.add(owner.owner_profile_id || owner.user_id || owner.id));
+  subscriptions
+    .filter(subscription => subscription.status === 'cancelled')
+    .forEach(subscription => cancelledKeys.add(subscription.owner_id || subscription.id));
+  const cancelledOwners = cancelledKeys.size;
   const pendingApprovals = [
     ...ownerProfiles.filter(profile => profile.verification_status === 'pending'),
     ...verificationRequests.filter(request => request.status === 'submitted'),
     ...properties.filter(property => ['draft', 'under_review'].includes(property.status))
   ].length;
+  const rejectedRequests = [
+    ...leads.filter(lead => ['rejected', 'not_fit'].includes(lead.status)),
+    ...owners.filter(owner => owner.status === 'rejected'),
+    ...ownerProfiles.filter(profile => profile.verification_status === 'rejected'),
+    ...verificationRequests.filter(request => request.status === 'rejected'),
+    ...properties.filter(property => property.status === 'rejected' || property.verification_status === 'rejected')
+  ].length;
+  const subscriptionRevenue = [
+    ...activeSubscriptionsFromOwners.map(owner => ({
+      key: owner.owner_profile_id || owner.user_id || owner.id,
+      amount: subscriptionPlanPrice(owner.plan_code)
+    })),
+    ...activeSubscriptionsFromTable.map(subscription => ({
+      key: subscription.owner_id || subscription.id,
+      amount: subscriptionPlanPrice(subscription.plan)
+    }))
+  ].reduce((sum, item, index, list) => {
+    if (list.findIndex(other => other.key === item.key) !== index) return sum;
+    return sum + item.amount;
+  }, 0);
 
-  const maxMetric = Math.max(activeSubscriptions, expiredTrials, cancelledOwners, pendingApprovals, 1);
+  const maxMetric = Math.max(activeSubscriptions, expiredTrials, cancelledOwners, pendingApprovals, rejectedRequests, 1);
   setMetricRing('metricActiveSubscriptions', activeSubscriptions, maxMetric);
   setMetricRing('metricExpiredTrials', expiredTrials, maxMetric);
   setMetricRing('metricCancelledOwners', cancelledOwners, maxMetric);
   setMetricRing('metricPendingApprovals', pendingApprovals, maxMetric);
+  setMetricRing('metricRejectedRequests', rejectedRequests, maxMetric);
+  setMetricRing('metricLinekRevenue', compactMoney(subscriptionRevenue), Math.max(subscriptionRevenue, Number(pricingValue.multi_price || DEFAULT_PRICING.multi_price), 1), subscriptionRevenue);
 }
 
-function setMetricRing(id, value, maxValue) {
+function setMetricRing(id, value, maxValue, angleValue = value) {
   const number = document.getElementById(id);
   if (!number) return;
-  const safeValue = Number(value || 0);
+  const safeValue = Number(angleValue || 0);
   const angle = safeValue === 0 ? 0 : Math.max(42, Math.round((safeValue / maxValue) * 360));
-  number.textContent = safeValue;
+  number.textContent = value;
   number.closest('.metric-card')?.style.setProperty('--metric-angle', `${angle}deg`);
 }
 

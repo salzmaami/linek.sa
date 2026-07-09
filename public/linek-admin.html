@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>لوحة Linek الداخلية</title>
-  <link rel="stylesheet" href="admin.css?v=20260709-donut">
+  <link rel="stylesheet" href="admin.css?v=20260709-metrics">
 </head>
 <body>
   <main class="shell">
@@ -41,6 +41,14 @@
       <button type="button" class="metric-card metric-info" data-open-section="verificationPanel">
         <span class="metric-ring"><b id="metricPendingApprovals">-</b></span>
         <span class="metric-label">بانتظار الموافقة</span>
+      </button>
+      <button type="button" class="metric-card metric-rejected" data-open-section="verificationPanel">
+        <span class="metric-ring"><b id="metricRejectedRequests">-</b></span>
+        <span class="metric-label">طلبات مرفوضة</span>
+      </button>
+      <button type="button" class="metric-card metric-revenue" data-open-section="ownersPanel">
+        <span class="metric-ring metric-ring-wide"><b id="metricLinekRevenue">-</b></span>
+        <span class="metric-label">دخل الاشتراكات الشهري</span>
       </button>
     </section>
 
@@ -145,6 +153,6 @@
   </main>
 
   <div class="toast" id="toast"></div>
-  <script src="admin.js?v=20260709-donut"></script>
+  <script src="admin.js?v=20260709-metrics"></script>
 </body>
 </html>

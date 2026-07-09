@@ -225,7 +225,7 @@ textarea {
 
 .metrics {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 18px;
   margin: 24px 0;
 }
@@ -264,6 +264,8 @@ textarea {
 .metric-card.metric-warn { --metric-color: #f4a62a; }
 .metric-card.metric-danger { --metric-color: #d64a55; }
 .metric-card.metric-info { --metric-color: #328cfa; }
+.metric-card.metric-rejected { --metric-color: #7d4b4b; }
+.metric-card.metric-revenue { --metric-color: #7b35f4; }
 
 .metric-ring {
   position: relative;
@@ -293,6 +295,10 @@ textarea {
   font-size: 32px;
   line-height: 1;
   color: var(--ink);
+}
+
+.metric-ring-wide b {
+  font-size: 22px;
 }
 
 .metric-label {
@@ -601,6 +607,10 @@ textarea {
 
   .metric-ring b {
     font-size: 26px;
+  }
+
+  .metric-ring-wide b {
+    font-size: 18px;
   }
 
   .metric-label {
