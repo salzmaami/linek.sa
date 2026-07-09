@@ -24,6 +24,7 @@
         <label class="field"><span>اسم النشاط اختياري</span><input name="business_name" autocomplete="organization"></label>
         <label class="field"><span>البريد الإلكتروني</span><input name="email" type="email" required autocomplete="email"></label>
         <label class="field"><span>الجوال</span><input name="mobile" required inputmode="tel" pattern="^05[0-9]{8}$" placeholder="05xxxxxxxx"></label>
+        <label class="field"><span>الباقة</span><select name="requested_plan" required><option value="single">الأساسية - عقار واحد</option><option value="multi">النمو - حتى 5 عقارات</option></select></label>
         <label class="field"><span>المدينة</span><input name="city" required minlength="2"></label>
         <label class="field"><span>كلمة المرور</span><input name="password" type="password" required minlength="8" autocomplete="new-password"></label>
         <label class="field"><span>تأكيد كلمة المرور</span><input name="confirm_password" type="password" required minlength="8" autocomplete="new-password"></label>
@@ -37,6 +38,10 @@
   <script src="linek-config.js"></script>
   <script src="linek-app.js"></script>
   <script>
+    const initialPlan = new URLSearchParams(location.search).get('plan');
+    if (['single', 'multi'].includes(initialPlan)) {
+      document.querySelector('[name="requested_plan"]').value = initialPlan;
+    }
     document.getElementById('registerForm').addEventListener('submit', async event => {
       event.preventDefault();
       const form = event.currentTarget;

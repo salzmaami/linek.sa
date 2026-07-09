@@ -56,6 +56,8 @@ create table if not exists public.owner_profiles (
   business_name text check (business_name is null or char_length(business_name) <= 140),
   city text not null check (char_length(city) between 2 and 80),
   whatsapp_number text not null check (char_length(whatsapp_number) between 7 and 30),
+  requested_plan text not null default 'single' check (requested_plan in ('single', 'multi')),
+  property_limit integer not null default 1 check (property_limit in (1, 5)),
   avatar_url text check (avatar_url is null or char_length(avatar_url) <= 1200),
   verification_status text not null default 'pending'
     check (verification_status in ('pending', 'approved', 'rejected', 'more_information_required')),
@@ -65,6 +67,17 @@ create table if not exists public.owner_profiles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.owner_profiles add column if not exists requested_plan text not null default 'single';
+alter table public.owner_profiles add column if not exists property_limit integer not null default 1;
+alter table public.owner_profiles drop constraint if exists owner_profiles_requested_plan_check;
+alter table public.owner_profiles
+  add constraint owner_profiles_requested_plan_check
+  check (requested_plan in ('single', 'multi'));
+alter table public.owner_profiles drop constraint if exists owner_profiles_property_limit_check;
+alter table public.owner_profiles
+  add constraint owner_profiles_property_limit_check
+  check (property_limit in (1, 5));
 
 -- Compatibility table used by the existing closed-beta pages.
 create table if not exists public.owners (

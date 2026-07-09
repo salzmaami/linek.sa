@@ -69,17 +69,35 @@ const OwnerTools = (() => {
     return {user, profile};
   }
 
-  async function properties() {
-    return Linek.db('properties?select=*,property_photos(url,sort_order,is_cover)&order=created_at.desc');
+  function propertyLimit(profile) {
+    const explicitLimit = Number(profile?.property_limit || 0);
+    if (explicitLimit > 0) return explicitLimit;
+    return ['multi', 'professional'].includes(profile?.requested_plan) ? 5 : 1;
   }
 
-  async function bookings() {
-    return Linek.db('bookings?select=*,properties(title,name,slug)&order=created_at.desc');
+  function planLabel(profile) {
+    return propertyLimit(profile) > 1 ? 'باقة النمو - حتى 5 عقارات' : 'الباقة الأساسية - عقار واحد';
+  }
+
+  async function properties(profileId) {
+    if (!profileId) return [];
+    return Linek.db(`properties?select=*,property_photos(url,sort_order,is_cover)&owner_profile_id=eq.${encodeURIComponent(profileId)}&order=created_at.desc`);
+  }
+
+  async function bookings(profileId) {
+    if (!profileId) return [];
+    return Linek.db(`bookings?select=*,properties(title,name,slug)&owner_profile_id=eq.${encodeURIComponent(profileId)}&order=created_at.desc`);
+  }
+
+  async function pageVisits(propertiesList) {
+    const ids = (propertiesList || []).map(property => property.id).filter(Boolean);
+    if (!ids.length) return [];
+    return Linek.db(`booking_page_visits?select=id,property_id,visited_at&property_id=in.(${ids.map(encodeURIComponent).join(',')})`);
   }
 
   function propertyOptions(list, selected = '') {
     return list.map(property => `<option value="${property.id}" ${property.id === selected ? 'selected' : ''}>${escapeHtml(property.title || property.name)}</option>`).join('');
   }
 
-  return {money, dateText, escapeHtml, slugify, publicLink, sidebar, guard, properties, bookings, propertyOptions};
+  return {money, dateText, escapeHtml, slugify, publicLink, sidebar, guard, propertyLimit, planLabel, properties, bookings, pageVisits, propertyOptions};
 })();

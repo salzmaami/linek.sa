@@ -31,17 +31,17 @@
       const context = await OwnerTools.guard();
       if (!context) return;
       document.getElementById('welcomeLine').textContent = `مرحباً ${context.profile.full_name}. هذه أرقام آخر 30 يوم.`;
-      const [properties, bookings, visits] = await Promise.all([
-        OwnerTools.properties(),
-        OwnerTools.bookings(),
-        Linek.db('booking_page_visits?select=id,property_id,visited_at')
+      const properties = await OwnerTools.properties(context.profile.id);
+      const [bookings, visits] = await Promise.all([
+        OwnerTools.bookings(context.profile.id),
+        OwnerTools.pageVisits(properties)
       ]);
       const pending = bookings.filter(item => item.status === 'pending');
       const confirmed = bookings.filter(item => item.status === 'confirmed');
       const revenue = confirmed.reduce((sum, item) => sum + Number(item.total_price || item.amount || 0), 0);
       const conversion = visits.length ? Math.round((bookings.length / visits.length) * 100) : 0;
       document.getElementById('metrics').innerHTML = [
-        ['العقارات', properties.length],
+        ['العقارات', `${properties.length}/${OwnerTools.propertyLimit(context.profile)}`],
         ['طلبات بانتظارك', pending.length],
         ['حجوزات مؤكدة', confirmed.length],
         ['زيارات الصفحات', visits.length],

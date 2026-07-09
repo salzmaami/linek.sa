@@ -112,6 +112,9 @@ const Linek = (() => {
   }
 
   async function signUp(payload) {
+    clearSession();
+    const requestedPlan = ['single', 'multi'].includes(clean(payload.requested_plan)) ? clean(payload.requested_plan) : 'single';
+    const propertyLimit = requestedPlan === 'multi' ? 5 : 1;
     const data = await auth('signup', {
       email: payload.email,
       password: payload.password,
@@ -119,7 +122,9 @@ const Linek = (() => {
         full_name: payload.full_name,
         business_name: payload.business_name || '',
         mobile: payload.mobile,
-        city: payload.city
+        city: payload.city,
+        requested_plan: requestedPlan,
+        property_limit: propertyLimit
       }
     });
     if (data.access_token) saveSession(data);
@@ -137,6 +142,8 @@ const Linek = (() => {
           business_name: payload.business_name || null,
           city: payload.city,
           whatsapp_number: payload.mobile,
+          requested_plan: requestedPlan,
+          property_limit: propertyLimit,
           verification_status: 'pending'
         },
         headers: {'Prefer': 'resolution=merge-duplicates,return=representation'}
@@ -146,6 +153,7 @@ const Linek = (() => {
   }
 
   async function signIn(identifier, password) {
+    clearSession();
     const data = await auth('token?grant_type=password', {email: identifier, password});
     saveSession(data);
     return data;
@@ -167,7 +175,9 @@ const Linek = (() => {
   }
 
   async function ownerProfile() {
-    const rows = await db('owner_profiles?select=*&limit=1');
+    const user = await currentUser();
+    if (!user) return null;
+    const rows = await db(`owner_profiles?select=*&user_id=eq.${encodeURIComponent(user.id)}&limit=1`);
     return rows[0] || null;
   }
 
@@ -180,6 +190,8 @@ const Linek = (() => {
     const fullName = clean(metadata.full_name) || clean(user.email).split('@')[0] || 'مالك Linek';
     const mobile = clean(metadata.mobile || user.phone) || '0500000000';
     const city = clean(metadata.city) || 'غير محدد';
+    const requestedPlan = ['single', 'multi'].includes(clean(metadata.requested_plan)) ? clean(metadata.requested_plan) : 'single';
+    const propertyLimit = Number(metadata.property_limit || 0) || (requestedPlan === 'multi' ? 5 : 1);
     await db('users', {
       method: 'POST',
       body: {id: user.id, email: user.email || null, mobile: null, role: 'owner'},
@@ -193,6 +205,8 @@ const Linek = (() => {
         business_name: clean(metadata.business_name) || null,
         city,
         whatsapp_number: mobile,
+        requested_plan: requestedPlan,
+        property_limit: propertyLimit,
         verification_status: 'pending'
       },
       headers: {'Prefer': 'resolution=merge-duplicates,return=representation'}

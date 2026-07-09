@@ -24,7 +24,7 @@
     async function load() {
       const context = await OwnerTools.guard();
       if (!context) return;
-      bookings = await OwnerTools.bookings();
+      bookings = await OwnerTools.bookings(context.profile.id);
       render();
     }
     function render() {
@@ -37,7 +37,7 @@
       const booking = bookings.find(item => item.id === id);
       if (!booking || booking.status !== 'pending') return;
       if (new Date(booking.expires_at).getTime() <= Date.now()) throw new Error('انتهت مهلة هذا الطلب');
-      await Linek.db(`bookings?id=eq.${encodeURIComponent(id)}`, {method: 'PATCH', body: {status, payment_status: status === 'confirmed' ? 'waiting_for_payment' : 'cancelled', decided_at: new Date().toISOString()}});
+      await Linek.db(`bookings?id=eq.${encodeURIComponent(id)}&owner_profile_id=eq.${encodeURIComponent(booking.owner_profile_id)}`, {method: 'PATCH', body: {status, payment_status: status === 'confirmed' ? 'waiting_for_payment' : 'cancelled', decided_at: new Date().toISOString()}});
       await Linek.db('booking_events', {method: 'POST', body: {booking_id: id, event_type: status === 'confirmed' ? 'Owner Accepted' : 'Owner Rejected', notes: status === 'confirmed' ? 'وافق المالك على الطلب.' : 'رفض المالك الطلب.'}});
     }
     document.body.addEventListener('click', async event => {

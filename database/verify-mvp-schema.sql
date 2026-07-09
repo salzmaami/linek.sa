@@ -51,6 +51,8 @@ with required_columns(table_name, column_name) as (
     ('bookings', 'expires_at'),
     ('bookings', 'payment_link_snapshot'),
     ('owner_profiles', 'verification_status'),
+    ('owner_profiles', 'requested_plan'),
+    ('owner_profiles', 'property_limit'),
     ('verification_requests', 'national_id_number'),
     ('verification_requests', 'date_of_birth'),
     ('verification_requests', 'national_address_short'),

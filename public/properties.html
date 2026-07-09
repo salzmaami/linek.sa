@@ -14,6 +14,7 @@
       <div class="stack">
         <section class="panel">
           <div class="panel-head"><div><span class="eyebrow">إدارة العقارات</span><h1>عقاراتك وروابط الحجز</h1></div></div>
+          <div class="notice" id="planNotice">جار تحميل الباقة...</div>
           <div class="stack" id="propertiesList"><div class="empty">جار التحميل...</div></div>
         </section>
         <section class="panel">
@@ -58,11 +59,19 @@
     async function load() {
       context = await OwnerTools.guard();
       if (!context) return;
-      const properties = await OwnerTools.properties();
+      const properties = await OwnerTools.properties(context.profile.id);
+      const limit = OwnerTools.propertyLimit(context.profile);
+      const atLimit = properties.length >= limit;
+      document.getElementById('planNotice').textContent = `${OwnerTools.planLabel(context.profile)}. المستخدم حالياً: ${properties.length} من ${limit}.`;
       document.getElementById('propertiesList').innerHTML = properties.map(property => {
         const link = OwnerTools.publicLink(property);
         return `<article class="card"><div class="panel-head"><div><b>${OwnerTools.escapeHtml(property.title || property.name)}</b><small>${OwnerTools.escapeHtml(property.city)} · ${OwnerTools.money(property.base_price)} · ${OwnerTools.escapeHtml(property.status)}</small></div><span class="badge ${property.status === 'draft' ? 'warn' : ''}">${property.status === 'published' ? 'منشور' : 'مسودة'}</span></div><div class="actions"><a class="button secondary" href="${link}" target="_blank" rel="noopener">معاينة</a><button class="button soft" data-copy="${link}" type="button">نسخ الرابط</button><button class="button secondary" data-edit="${property.id}" type="button">تعديل</button></div></article>`;
       }).join('') || '<div class="empty">ليس لديك أي عقار حتى الآن. استخدم النموذج لإضافة أول عقار.</div>';
+      if (atLimit && !form.elements.id.value) {
+        document.getElementById('planNotice').className = 'notice warn';
+      } else {
+        document.getElementById('planNotice').className = 'notice';
+      }
       document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', async () => { await navigator.clipboard.writeText(button.dataset.copy); Linek.toast('تم نسخ الرابط'); }));
       document.querySelectorAll('[data-edit]').forEach(button => button.addEventListener('click', () => {
         const property = properties.find(item => item.id === button.dataset.edit);
@@ -75,6 +84,16 @@
       event.preventDefault();
       const submitter = event.submitter;
       const data = Linek.formData(form);
+      const currentProperties = await OwnerTools.properties(context.profile.id);
+      const limit = OwnerTools.propertyLimit(context.profile);
+      if (!data.id && currentProperties.length >= limit) {
+        Linek.toast(`وصلت للحد المسموح في باقتك: ${limit} عقار`);
+        return;
+      }
+      if (data.id && !currentProperties.some(property => property.id === data.id)) {
+        Linek.toast('لا يمكنك تعديل عقار لا يخص حسابك');
+        return;
+      }
       const body = {
         owner_profile_id: context.profile.id,
         title: data.title,
@@ -101,7 +120,7 @@
       };
       Linek.setLoading(submitter, true);
       try {
-        const path = data.id ? `properties?id=eq.${encodeURIComponent(data.id)}` : 'properties';
+        const path = data.id ? `properties?id=eq.${encodeURIComponent(data.id)}&owner_profile_id=eq.${encodeURIComponent(context.profile.id)}` : 'properties';
         const rows = await Linek.db(path, {method: data.id ? 'PATCH' : 'POST', body});
         const property = rows[0];
         const photos = data.photos.split(/\n|,/).map(item => item.trim()).filter(Boolean);

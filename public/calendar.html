@@ -18,7 +18,7 @@
     async function load() {
       const context = await OwnerTools.guard();
       if (!context) return;
-      properties = await OwnerTools.properties();
+      properties = await OwnerTools.properties(context.profile.id);
       document.getElementById('propertySelect').innerHTML = OwnerTools.propertyOptions(properties);
       render();
     }

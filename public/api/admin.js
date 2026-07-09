@@ -434,11 +434,12 @@ async function updateVerification(config, body) {
 
   const existingSubscriptions = await supabase(config, `subscriptions?select=id&owner_id=eq.${encodeURIComponent(profileId)}&limit=1`);
   if (decision === 'approve' && !existingSubscriptions.length) {
+    const subscriptionPlan = profile?.requested_plan === 'multi' || Number(profile?.property_limit || 1) > 1 ? 'professional' : 'starter';
     await supabase(config, 'subscriptions', {
       method: 'POST',
       body: {
         owner_id: profileId,
-        plan: 'starter',
+        plan: subscriptionPlan,
         status: 'trial',
         start_date: new Date().toISOString().slice(0, 10),
         renewal_date: addDays(new Date(), 14).slice(0, 10)
