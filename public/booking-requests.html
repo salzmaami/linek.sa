@@ -26,6 +26,44 @@
       if (booking.status === 'confirmed' && booking.payment_status === 'paid_confirmed') return 'مؤكد نهائياً';
       return statusLabels[booking.status] || booking.status;
     }
+    function bookingStatusUrl(booking) {
+      const ref = booking.reference || booking.public_code || '';
+      return `${location.origin}/booking-status.html?ref=${encodeURIComponent(ref)}&token=${encodeURIComponent(booking.guest_access_token || '')}`;
+    }
+    function whatsappHref(number, message) {
+      const clean = String(number || '').replace(/[^\d]/g, '');
+      return `https://wa.me/${clean || '966570547475'}?text=${encodeURIComponent(message)}`;
+    }
+    function ticketMessage(booking) {
+      const amount = OwnerTools.money(booking.total_price || booking.amount);
+      return [
+        `مرحباً ${booking.guest_name || ''}`,
+        `هذه تذكرة طلبك عبر لاينك بوكنق:`,
+        `رقم الطلب: ${booking.reference || booking.public_code || '-'}`,
+        `العقار: ${booking.properties?.title || booking.properties?.name || '-'}`,
+        `التاريخ: ${OwnerTools.dateText(booking.check_in)} إلى ${OwnerTools.dateText(booking.check_out)}`,
+        `المبلغ: ${amount}`,
+        `رابط حالة الحجز: ${bookingStatusUrl(booking)}`
+      ].join('\n');
+    }
+    function invoiceMessage(booking) {
+      return [
+        `مرحباً ${booking.guest_name || ''}`,
+        `تمت إضافة رابط دفع طلبك في لاينك بوكنق.`,
+        `رقم الطلب: ${booking.reference || booking.public_code || '-'}`,
+        `رابط الدفع وحالة الحجز: ${bookingStatusUrl(booking)}`
+      ].join('\n');
+    }
+    function linekAlertMessage(booking) {
+      return [
+        `تنبيه طلب حجز - لاينك بوكنق`,
+        `رقم الطلب: ${booking.reference || booking.public_code || '-'}`,
+        `الضيف: ${booking.guest_name || '-'} - ${booking.guest_mobile || booking.guest_phone || '-'}`,
+        `العقار: ${booking.properties?.title || booking.properties?.name || '-'}`,
+        `الحالة: ${displayStatus(booking)}`,
+        `الرابط: ${bookingStatusUrl(booking)}`
+      ].join('\n');
+    }
     function statusBadgeClass(booking) {
       if (booking.status === 'pending') return 'warn';
       if (['rejected', 'cancelled', 'expired'].includes(booking.status)) return 'danger';
@@ -47,6 +85,15 @@
           <input data-payment-link="${booking.id}" type="url" dir="ltr" placeholder="https://..." value="${OwnerTools.escapeHtml(booking.payment_link_snapshot || '')}">
           <button class="button secondary" data-action="save-payment-link" data-id="${booking.id}" type="button">حفظ رابط الدفع</button>
         </div>
+      </div>`;
+    }
+    function shareActions(booking) {
+      const guestPhone = booking.guest_mobile || booking.guest_phone || '';
+      const invoiceDisabled = !booking.payment_link_snapshot || booking.payment_status === 'paid_confirmed';
+      return `<div class="actions">
+        <a class="button secondary" href="${whatsappHref(guestPhone, ticketMessage(booking))}" target="_blank" rel="noreferrer">إرسال التذكرة للضيف</a>
+        ${invoiceDisabled ? '' : `<a class="button" href="${whatsappHref(guestPhone, invoiceMessage(booking))}" target="_blank" rel="noreferrer">إرسال رابط الدفع للضيف</a>`}
+        <a class="button soft" href="${whatsappHref('966570547475', linekAlertMessage(booking))}" target="_blank" rel="noreferrer">إبلاغ لاينك</a>
       </div>`;
     }
     function actionButtons(booking) {
@@ -119,6 +166,7 @@
             <div class="notice ${booking.status === 'pending' ? 'warn' : booking.payment_status === 'paid_confirmed' ? 'success' : ''}">${statusNotice(booking)}</div>
             ${booking.notes ? `<div class="notice">ملاحظات الضيف: ${OwnerTools.escapeHtml(booking.notes)}</div>` : ''}
             ${paymentLinkEditor(booking)}
+            ${shareActions(booking)}
             <div class="actions">${actionButtons(booking)}</div>
           </div>
         </details>`;
@@ -152,7 +200,7 @@
     }
     async function savePaymentLink(id) {
       const booking = bookings.find(item => item.id === id);
-      const input = document.querySelector(`[data-payment-link="${CSS.escape(id)}"]`);
+      const input = document.querySelector(`[data-payment-link="${id}"]`);
       const paymentLink = input?.value.trim();
       if (!booking || booking.status !== 'confirmed') return;
       if (!paymentLink) throw new Error('أضف رابط الدفع أولاً');

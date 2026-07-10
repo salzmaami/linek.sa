@@ -50,6 +50,11 @@ function validSaudiMobile(value) {
   return /^05[0-9]{8}$/.test(value);
 }
 
+function siteOrigin(req) {
+  return clean(process.env.LINEK_PUBLIC_SITE_URL || process.env.PUBLIC_SITE_URL).replace(/\/$/, '')
+    || `https://${req.headers.host || 'www.linek.sa'}`;
+}
+
 async function paymentSnapshot(config, property) {
   if (property.owner_profile_id) {
     const rows = await supabase(config, `owner_payment_methods?select=*&owner_id=eq.${encodeURIComponent(property.owner_profile_id)}&active=eq.true&limit=1`);
@@ -65,6 +70,50 @@ async function paymentSnapshot(config, property) {
     link: property.payment_link || null,
     instructions: property.payment_method_note || null
   };
+}
+
+async function notifyBookingCreated(req, config, booking, property) {
+  const webhookUrl = clean(process.env.LINEK_BOOKING_WEBHOOK_URL);
+  if (!webhookUrl) return;
+  let ownerProfile = null;
+  if (property.owner_profile_id) {
+    try {
+      const rows = await supabase(config, `owner_profiles?select=full_name,whatsapp_number,business_name&id=eq.${encodeURIComponent(property.owner_profile_id)}&limit=1`);
+      ownerProfile = rows[0] || null;
+    } catch (_) {}
+  }
+  const ref = booking.reference || booking.public_code;
+  const statusUrl = `${siteOrigin(req)}/booking-status.html?ref=${encodeURIComponent(ref)}&token=${encodeURIComponent(booking.guest_access_token)}`;
+  const payload = {
+    event: 'booking.created',
+    booking: {
+      id: booking.id,
+      reference: ref,
+      status: booking.status,
+      guest_name: booking.guest_name,
+      guest_mobile: booking.guest_mobile || booking.guest_phone,
+      check_in: booking.check_in,
+      check_out: booking.check_out,
+      guests_count: booking.guests_count,
+      total_price: booking.total_price || booking.amount,
+      status_url: statusUrl
+    },
+    property: {
+      id: property.id,
+      title: property.title || property.name,
+      slug: property.slug,
+      owner_profile_id: property.owner_profile_id
+    },
+    owner: ownerProfile
+  };
+  const headers = {'Content-Type': 'application/json'};
+  const secret = clean(process.env.LINEK_BOOKING_WEBHOOK_SECRET);
+  if (secret) headers['X-Linek-Webhook-Secret'] = secret;
+  await fetch(webhookUrl, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload)
+  });
 }
 
 module.exports = async function handler(req, res) {
@@ -127,6 +176,7 @@ module.exports = async function handler(req, res) {
       }
     });
     const booking = rows[0];
+    notifyBookingCreated(req, config, booking, property).catch(() => {});
     return json(res, 201, {
       ok: true,
       reference: booking.reference || booking.public_code,
