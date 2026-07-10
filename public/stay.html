@@ -6,6 +6,7 @@
     <title>Linek | صفحة الضيف</title>
     <link rel="icon" href="assets/linek-mark.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="journey.css" />
+    <link rel="stylesheet" href="guest-gallery.css" />
   </head>
   <body>
     <main class="app-shell">
@@ -16,7 +17,6 @@
           <a class="active" href="#bookingArea">الحجز</a>
           <a href="https://wa.me/966570547475" target="_blank" rel="noreferrer">الدعم</a>
         </nav>
-        <button class="pill ghost" id="startBookingTop" type="button">احجز الآن</button>
       </header>
 
       <section class="intro-gate" id="introGate">
@@ -43,7 +43,17 @@
             <div class="place-picker" id="guestPlacePicker"></div>
           </section>
 
-          <div class="gallery"><img id="guestImage" src="assets/chalet-hero.png" alt="صورة المكان" /></div>
+          <div class="gallery guest-gallery" id="guestGallery">
+            <div class="gallery-stage">
+              <button class="gallery-image-button" id="openGuestGallery" type="button" aria-label="فتح صور المكان">
+                <img id="guestImage" src="assets/chalet-hero.png" alt="صورة المكان" />
+              </button>
+              <button class="gallery-side prev" id="prevGuestPhoto" type="button" aria-label="الصورة السابقة">‹</button>
+              <button class="gallery-side next" id="nextGuestPhoto" type="button" aria-label="الصورة التالية">›</button>
+              <span class="gallery-count-badge" id="guestPhotoCount">1 / 1</span>
+            </div>
+            <div class="guest-thumbs" id="guestThumbs" aria-label="صور المكان المصغرة"></div>
+          </div>
           <section class="panel">
             <span class="badge brand-badge" id="guestBadge"><span>موثق من</span><span class="linek-badge-word"><img src="assets/linek-mark.svg" alt="" /><b>Linek</b></span></span>
             <h1 class="page-title" id="guestPlaceName">شاليه سُكون</h1>
@@ -123,6 +133,15 @@
         </aside>
       </section>
     </main>
+    <div class="gallery-lightbox" id="galleryLightbox" hidden>
+      <div class="lightbox-panel" role="dialog" aria-modal="true" aria-label="معرض صور المكان">
+        <button class="lightbox-close" id="closeGuestGallery" type="button" aria-label="إغلاق معرض الصور">إغلاق</button>
+        <button class="lightbox-nav prev" id="prevLightboxPhoto" type="button" aria-label="الصورة السابقة">‹</button>
+        <img id="lightboxImage" src="assets/chalet-hero.png" alt="صورة المكان بحجم كبير" />
+        <button class="lightbox-nav next" id="nextLightboxPhoto" type="button" aria-label="الصورة التالية">›</button>
+        <span class="lightbox-count" id="lightboxPhotoCount">1 / 1</span>
+      </div>
+    </div>
     <div class="toast" id="toast">تم</div>
     <script src="linek-config.js"></script>
     <script src="linek-app.js"></script>

@@ -3,6 +3,8 @@ const BookingPage = (() => {
   let property = null;
   let calendarMonth = new Date();
   let availabilityByDate = {};
+  let galleryPhotos = [fallbackImage];
+  let activePhotoIndex = 0;
 
   function params() {
     return new URLSearchParams(location.search);
@@ -50,9 +52,135 @@ const BookingPage = (() => {
     if (el) el.textContent = value;
   }
 
+  function setHidden(id, hidden) {
+    const el = document.getElementById(id);
+    if (el) el.hidden = hidden;
+  }
+
   function whatsappHref(number, message) {
     const clean = String(number || '').replace(/[^\d]/g, '');
     return clean ? `https://wa.me/${clean}?text=${encodeURIComponent(message)}` : `https://wa.me/966570547475`;
+  }
+
+  function normalizePhotoValue(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.flatMap(normalizePhotoValue);
+    if (typeof value === 'object') {
+      return normalizePhotoValue(value.url || value.image_url || value.src || value.href);
+    }
+    return String(value)
+      .split(/\n|,/)
+      .map(url => url.trim())
+      .filter(Boolean);
+  }
+
+  function sortPhotoRows(rows, orderKey = 'sort_order') {
+    return (rows || [])
+      .filter(photo => photo?.url || photo?.image_url)
+      .sort((a, b) => {
+        if (Boolean(a.is_cover) !== Boolean(b.is_cover)) return a.is_cover ? -1 : 1;
+        return Number(a[orderKey] || 0) - Number(b[orderKey] || 0);
+      });
+  }
+
+  function sortedPhotos() {
+    const photoUrls = [
+      ...sortPhotoRows(property.property_photos, 'sort_order').flatMap(normalizePhotoValue),
+      ...sortPhotoRows(property.property_images, 'display_order').flatMap(normalizePhotoValue),
+      ...normalizePhotoValue(property.photo_urls),
+      ...normalizePhotoValue(property.photos),
+      ...normalizePhotoValue(property.image_urls),
+      ...normalizePhotoValue(property.image_url),
+      ...normalizePhotoValue(property.cover_image_url)
+    ];
+    return [...new Set(photoUrls)];
+  }
+
+  function renderGallery() {
+    galleryPhotos = sortedPhotos();
+    if (!galleryPhotos.length) galleryPhotos = [fallbackImage];
+    activePhotoIndex = Math.min(activePhotoIndex, galleryPhotos.length - 1);
+    renderActivePhoto();
+    renderThumbs();
+  }
+
+  function renderActivePhoto() {
+    const current = galleryPhotos[activePhotoIndex] || fallbackImage;
+    const count = `${activePhotoIndex + 1} / ${galleryPhotos.length}`;
+    const mainImage = document.getElementById('guestImage');
+    const lightboxImage = document.getElementById('lightboxImage');
+    if (mainImage) mainImage.src = current;
+    if (lightboxImage) lightboxImage.src = current;
+    setText('guestPhotoCount', count);
+    setText('lightboxPhotoCount', count);
+    ['prevGuestPhoto', 'nextGuestPhoto', 'prevLightboxPhoto', 'nextLightboxPhoto'].forEach(id => {
+      const button = document.getElementById(id);
+      if (button) button.disabled = galleryPhotos.length < 2;
+    });
+    setHidden('guestPhotoCount', galleryPhotos.length < 2);
+    setHidden('guestThumbs', galleryPhotos.length < 2);
+  }
+
+  function renderThumbs() {
+    const thumbs = document.getElementById('guestThumbs');
+    if (!thumbs) return;
+    thumbs.innerHTML = '';
+    galleryPhotos.forEach((url, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = index === activePhotoIndex ? 'active' : '';
+      button.setAttribute('aria-label', `عرض الصورة ${index + 1}`);
+      const image = document.createElement('img');
+      image.src = url;
+      image.alt = '';
+      button.append(image);
+      button.addEventListener('click', () => {
+        activePhotoIndex = index;
+        renderActivePhoto();
+        renderThumbs();
+      });
+      thumbs.append(button);
+    });
+  }
+
+  function movePhoto(direction) {
+    if (galleryPhotos.length < 2) return;
+    activePhotoIndex = (activePhotoIndex + direction + galleryPhotos.length) % galleryPhotos.length;
+    renderActivePhoto();
+    renderThumbs();
+  }
+
+  function openGallery() {
+    const lightbox = document.getElementById('galleryLightbox');
+    if (!lightbox) return;
+    lightbox.hidden = false;
+    document.body.classList.add('lightbox-open');
+  }
+
+  function closeGallery() {
+    const lightbox = document.getElementById('galleryLightbox');
+    if (!lightbox) return;
+    lightbox.hidden = true;
+    document.body.classList.remove('lightbox-open');
+  }
+
+  function bindGalleryControls() {
+    document.getElementById('openGuestGallery')?.addEventListener('click', openGallery);
+    document.getElementById('closeGuestGallery')?.addEventListener('click', closeGallery);
+    document.getElementById('galleryLightbox')?.addEventListener('click', event => {
+      if (event.target.id === 'galleryLightbox') closeGallery();
+    });
+    document.getElementById('prevGuestPhoto')?.addEventListener('click', () => movePhoto(-1));
+    document.getElementById('nextGuestPhoto')?.addEventListener('click', () => movePhoto(1));
+    document.getElementById('prevLightboxPhoto')?.addEventListener('click', () => movePhoto(-1));
+    document.getElementById('nextLightboxPhoto')?.addEventListener('click', () => movePhoto(1));
+    document.addEventListener('keydown', event => {
+      const lightbox = document.getElementById('galleryLightbox');
+      if (!lightbox || lightbox.hidden) return;
+      if (event.key === 'Escape') closeGallery();
+      if (event.key === 'ArrowRight') movePhoto(-1);
+      if (event.key === 'ArrowLeft') movePhoto(1);
+    });
   }
 
   async function loadProperty() {
@@ -62,14 +190,18 @@ const BookingPage = (() => {
     if (!rows.length) throw new Error('العقار غير موجود أو غير منشور');
     property = rows[0];
     try {
+      property.property_images = await Linek.db(`property_images?select=image_url,display_order,is_cover&property_id=eq.${encodeURIComponent(property.id)}&order=display_order.asc`, {public: true});
+    } catch (_) {
+      property.property_images = [];
+    }
+    try {
       await Linek.db('booking_page_visits', {public: true, method: 'POST', prefer: 'return=minimal', body: {property_id: property.id, visitor_identifier: localStorage.getItem('linek_visitor_id') || crypto.randomUUID(), user_agent: navigator.userAgent, referrer: document.referrer || null}});
     } catch (_) {}
     return property;
   }
 
   function render() {
-    const photos = (property.property_photos || []).sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
-    document.getElementById('guestImage').src = photos[0]?.url || fallbackImage;
+    renderGallery();
     setText('guestPlaceName', property.title || property.name);
     setText('guestDescription', property.description || 'صفحة حجز موثقة من لاينك بوكنق.');
     setText('guestCity', property.city || '-');
@@ -255,6 +387,7 @@ const BookingPage = (() => {
       });
       document.getElementById('guestCount').addEventListener('input', renderReview);
       document.getElementById('bookingForm').addEventListener('submit', submit);
+      bindGalleryControls();
     } catch (error) {
       Linek.toast(error.message);
       document.getElementById('bookingArea').innerHTML = `<div class="panel"><h1>الرابط غير متاح</h1><p>${error.message}</p><a class="pill" href="index.html">العودة للرئيسية</a></div>`;
@@ -267,12 +400,5 @@ const BookingPage = (() => {
 document.getElementById('startBooking').addEventListener('click', () => {
   document.getElementById('bookingArea').scrollIntoView({behavior: 'smooth', block: 'start'});
 });
-
-const topBookingButton = document.getElementById('startBookingTop');
-if (topBookingButton) {
-  topBookingButton.addEventListener('click', () => {
-    document.getElementById('bookingArea').scrollIntoView({behavior: 'smooth', block: 'start'});
-  });
-}
 
 BookingPage.init();
