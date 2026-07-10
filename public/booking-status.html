@@ -31,7 +31,7 @@
         <div class="status-steps flow-steps" id="steps">
           <span data-step="submitted"><i>1</i><b>إرسال الطلب</b><small>وصلت البيانات</small></span>
           <span data-step="pending"><i>2</i><b>بانتظار المالك</b><small>مراجعة التوفر</small></span>
-          <span data-step="confirmed"><i>3</i><b>مؤكد</b><small>تمت الموافقة</small></span>
+          <span data-step="decision"><i>3</i><b>قرار المالك</b><small>بانتظار القرار</small></span>
           <span data-step="final"><i>4</i><b>نهائي</b><small>اكتملت الحالة</small></span>
         </div>
       </div>
@@ -65,6 +65,30 @@
         expired: ['انتهت مهلة الطلب', 'يمكنك إرسال طلب حجز جديد بتواريخ متاحة.'],
         cancelled: ['تم إلغاء الحجز', 'هذا الطلب لم يعد نشطاً.']
       }[status] || ['حالة الطلب', status];
+    }
+    function decisionCopy(status) {
+      return {
+        pending: ['قرار المالك', 'بانتظار القرار', ''],
+        confirmed: ['مؤكد', 'تمت الموافقة', 'success'],
+        rejected: ['مرفوض', 'رفض المالك الطلب', 'danger'],
+        expired: ['انتهت المهلة', 'لم يتم القبول', 'warn'],
+        cancelled: ['ملغي', 'تم إلغاء الطلب', 'danger']
+      }[status] || ['قرار المالك', status, ''];
+    }
+    function eventTone(event) {
+      const text = `${event.event_type || ''} ${event.notes || ''}`.toLowerCase();
+      if (/reject|رفض|cancel|إلغاء/.test(text)) return 'danger';
+      if (/accept|confirm|وافق|موافق|تأكيد|تمت الموافقة/.test(text)) return 'success';
+      if (/expire|انته|مهلة/.test(text)) return 'warn';
+      return '';
+    }
+    function eventLabel(type) {
+      return {
+        'Booking Created': 'تم إنشاء طلب الحجز',
+        'Owner Accepted': 'وافق المالك',
+        'Owner Rejected': 'رفض المالك',
+        'Booking Expired': 'انتهت مهلة الطلب'
+      }[type] || type || 'حدث';
     }
     function updateTimerUi(value, progress, note) {
       document.getElementById('timer').textContent = value;
@@ -102,11 +126,17 @@
       const copy = statusCopy(booking.status);
       const activeSteps = {
         pending: ['submitted', 'pending'],
-        confirmed: ['submitted', 'pending', 'confirmed'],
-        rejected: ['submitted', 'pending', 'final'],
-        expired: ['submitted', 'pending', 'final'],
-        cancelled: ['submitted', 'pending', 'final']
+        confirmed: ['submitted', 'pending', 'decision', 'final'],
+        rejected: ['submitted', 'pending', 'decision', 'final'],
+        expired: ['submitted', 'pending', 'decision', 'final'],
+        cancelled: ['submitted', 'pending', 'decision', 'final']
       }[booking.status] || ['submitted'];
+      const decision = decisionCopy(booking.status);
+      const decisionStep = document.querySelector('#steps [data-step="decision"]');
+      decisionStep.querySelector('b').textContent = decision[0];
+      decisionStep.querySelector('small').textContent = decision[1];
+      decisionStep.classList.remove('success', 'danger', 'warn');
+      if (decision[2]) decisionStep.classList.add(decision[2]);
       document.getElementById('ticketRef').textContent = booking.reference || booking.public_code || '--';
       document.getElementById('statusTitle').textContent = copy[0];
       document.getElementById('statusMessage').textContent = copy[1];
@@ -125,7 +155,7 @@
         ['المبلغ التقديري', money(booking.total_price || booking.amount)],
         ['تعليمات الدفع', booking.payment_instructions_snapshot || 'تظهر حسب وسيلة دفع المالك']
       ].map(([label, value]) => `<div class="ticket-row"><small>${label}</small><b>${value}</b></div>`).join('');
-      document.getElementById('eventsList').innerHTML = (data.events || []).map(event => `<div class="event-item"><b>${event.event_type}</b><small>${dateText(event.created_at)} · ${event.notes || ''}</small></div>`).join('') || '<div class="empty">لا توجد أحداث بعد.</div>';
+      document.getElementById('eventsList').innerHTML = (data.events || []).map(event => `<div class="event-item ${eventTone(event)}"><b>${eventLabel(event.event_type)}</b><small>${dateText(event.created_at)} · ${event.notes || ''}</small></div>`).join('') || '<div class="empty">لا توجد أحداث بعد.</div>';
       renderTimer();
     }
     function demoData() {

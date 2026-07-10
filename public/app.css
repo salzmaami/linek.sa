@@ -563,6 +563,36 @@ p, .muted { color: var(--muted); line-height: 1.8; }
   box-shadow: 0 10px 24px rgba(109, 61, 244, .2);
 }
 
+.flow-steps span.active.success i {
+  border-color: var(--green);
+  background: var(--green);
+}
+
+.flow-steps span.active.danger i {
+  border-color: var(--red);
+  background: var(--red);
+}
+
+.flow-steps span.active.warn i {
+  border-color: var(--orange);
+  background: var(--orange);
+}
+
+.flow-steps span.active.success b,
+.flow-steps span.active.success small {
+  color: var(--green);
+}
+
+.flow-steps span.active.danger b,
+.flow-steps span.active.danger small {
+  color: var(--red);
+}
+
+.flow-steps span.active.warn b,
+.flow-steps span.active.warn small {
+  color: var(--orange);
+}
+
 .flow-steps b {
   margin-top: 10px;
   font-size: 15px;
@@ -662,6 +692,45 @@ p, .muted { color: var(--muted); line-height: 1.8; }
   height: 7px;
   border-radius: 50%;
   background: var(--purple);
+}
+
+.event-item.success {
+  border-color: #bfe5cc;
+  background: var(--green-soft);
+}
+
+.event-item.success:before {
+  background: var(--green);
+}
+
+.event-item.success b {
+  color: var(--green);
+}
+
+.event-item.danger {
+  border-color: #efb8b8;
+  background: var(--red-soft);
+}
+
+.event-item.danger:before {
+  background: var(--red);
+}
+
+.event-item.danger b {
+  color: var(--red);
+}
+
+.event-item.warn {
+  border-color: #f1d39b;
+  background: var(--orange-soft);
+}
+
+.event-item.warn:before {
+  background: var(--orange);
+}
+
+.event-item.warn b {
+  color: var(--orange);
 }
 
 .event-item small {
