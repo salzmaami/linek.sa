@@ -43,20 +43,18 @@
       const confirmed = recentBookings.filter(item => item.status === 'confirmed');
       const revenue = confirmed.reduce((sum, item) => sum + Number(item.total_price || item.amount || 0), 0);
       const conversion = recentVisits.length ? Math.round((recentBookings.length / recentVisits.length) * 100) : 0;
-      const maxMetric = Math.max(properties.length, pending.length, confirmed.length, recentVisits.length, 1);
+      const propertyLimit = OwnerTools.propertyLimit(context.profile);
       const metricCards = [
-        {label: 'العقارات', value: `${properties.length}/${OwnerTools.propertyLimit(context.profile)}`, amount: properties.length, color: '#6d3df4', href: 'properties.html'},
-        {label: 'طلبات بانتظارك', value: pending.length, amount: pending.length, color: '#b36a13', href: 'booking-requests.html'},
-        {label: 'حجوزات مؤكدة', value: confirmed.length, amount: confirmed.length, color: '#1f8a5b', href: 'booking-requests.html'},
-        {label: 'زيارات الصفحات', value: recentVisits.length, amount: recentVisits.length, color: '#2584e8', href: 'properties.html'},
-        {label: 'نسبة التحويل', value: `${conversion}%`, amount: conversion, max: 100, color: '#7a42f4', href: 'booking-requests.html'},
-        {label: 'إيراد تقديري', value: OwnerTools.money(revenue), amount: confirmed.length, color: '#111827', href: 'booking-requests.html'}
+        {label: 'العقارات', hint: 'المستخدم من حد الباقة', value: `${properties.length}/${propertyLimit}`, progress: propertyLimit ? (properties.length / propertyLimit) * 100 : 0, color: '#6d3df4', href: 'properties.html'},
+        {label: 'طلبات بانتظارك', hint: 'طلبات تحتاج قبول أو رفض', value: pending.length, progress: pending.length ? 100 : 0, color: '#b36a13', href: 'booking-requests.html'},
+        {label: 'حجوزات مؤكدة', hint: 'حجوزات تم قبولها', value: confirmed.length, progress: confirmed.length ? 100 : 0, color: '#1f8a5b', href: 'booking-requests.html'},
+        {label: 'زيارات الصفحات', hint: 'زيارات صفحة الحجز', value: recentVisits.length, progress: recentVisits.length ? 100 : 0, color: '#2584e8', href: 'properties.html'},
+        {label: 'تحويل الطلبات من الزيارات', hint: 'طلبات الحجز ÷ زيارات صفحة الحجز', value: `${conversion}%`, progress: conversion, color: '#7a42f4', href: 'booking-requests.html'},
+        {label: 'إيراد تقديري', hint: 'مجموع الحجوزات المؤكدة', value: OwnerTools.money(revenue), progress: revenue ? 100 : 0, color: '#111827', href: 'booking-requests.html'}
       ];
-      document.getElementById('metrics').innerHTML = [
-      ].concat(metricCards).map(item => {
-        const denominator = item.max || maxMetric;
-        const progress = Math.max(8, Math.min(100, Math.round((Number(item.amount || 0) / denominator) * 100)));
-        return `<a class="donut-metric" href="${item.href}" style="--metric-color:${item.color};--metric-progress:${progress}%"><div class="metric-ring"><b>${item.value}</b></div><span>${item.label}</span></a>`;
+      document.getElementById('metrics').innerHTML = metricCards.map(item => {
+        const progress = Math.max(0, Math.min(100, Math.round(Number(item.progress || 0))));
+        return `<a class="donut-metric" href="${item.href}" style="--metric-color:${item.color};--metric-progress:${progress}%"><div class="metric-ring"><b>${item.value}</b></div><span>${item.label}</span><small>${item.hint}</small></a>`;
       }).join('');
       document.getElementById('recentBookings').innerHTML = bookings.slice(0, 5).map(booking => `<div class="card"><b>${OwnerTools.escapeHtml(booking.guest_name)}</b><small>${OwnerTools.escapeHtml(booking.properties?.title || booking.properties?.name || '')} · ${OwnerTools.dateText(booking.check_in)} · ${OwnerTools.money(booking.total_price || booking.amount)}</small><span class="badge ${booking.status === 'pending' ? 'warn' : ''}">${OwnerTools.escapeHtml(booking.status)}</span></div>`).join('') || '<div class="empty">لا توجد طلبات حجز بعد.</div>';
       document.getElementById('copyFirstLink').addEventListener('click', async () => {

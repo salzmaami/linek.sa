@@ -3,6 +3,25 @@
   gap: 6px !important;
 }
 
+.calendar-toolbar {
+  align-items: flex-start !important;
+}
+
+.calendar-toolbar h2 {
+  margin-bottom: 4px;
+}
+
+.calendar-month-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.calendar-month-actions .button {
+  min-height: 38px;
+  padding: 8px 14px;
+}
+
 .weekday {
   display: block !important;
   padding: 2px !important;
@@ -40,6 +59,17 @@
 }
 
 @media (max-width: 700px) {
+  .calendar-toolbar {
+    display: grid !important;
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-month-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
   .calendar-grid {
     gap: 4px !important;
   }

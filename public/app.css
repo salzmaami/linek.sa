@@ -306,6 +306,13 @@ p, .muted { color: var(--muted); line-height: 1.8; }
   font-size: 13px;
   font-weight: 900;
 }
+.donut-metric small {
+  min-height: 30px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 800;
+}
 .booking-ticket {
   border: 1px solid var(--line);
   border-radius: 8px;
