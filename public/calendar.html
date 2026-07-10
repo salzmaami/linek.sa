@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Linek | التقويم</title><link rel="stylesheet" href="app.css"><style>.calendar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.calendar-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.legend-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:13px;font-weight:800;color:var(--muted)}.legend-dot{width:10px;height:10px;border-radius:50%;background:var(--green)}.legend-dot.blocked{background:#7a7482}.legend-dot.reserved{background:var(--blue)}.legend-dot.pending{background:var(--orange)}.legend-dot.external{background:var(--purple)}.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:9px}.weekday{padding:4px;color:var(--muted);font-size:12px;font-weight:900;text-align:center}.day-cell{min-height:104px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:10px;text-align:right;box-shadow:0 10px 24px rgba(31,26,46,.05);transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}.day-cell:hover{transform:translateY(-2px);border-color:#c9bbe9;box-shadow:0 16px 32px rgba(31,26,46,.09)}.day-cell b{display:block;font-size:22px}.day-cell small{display:inline-flex;margin-top:16px;padding:5px 8px;border-radius:999px;font-size:12px;font-weight:900}.day-cell[data-status="available"]{background:linear-gradient(180deg,#fff,#f0fbf4)}.day-cell[data-status="available"] small{background:var(--green-soft);color:var(--green)}.day-cell[data-status="blocked"]{background:linear-gradient(180deg,#fff,#f3f2f1)}.day-cell[data-status="blocked"] small{background:#eeeae6;color:#5e5963}.day-cell[data-status="reserved"]{background:linear-gradient(180deg,#fff,#edf5ff)}.day-cell[data-status="reserved"] small{background:#e1efff;color:#1d67aa}.day-cell[data-status="pending"]{background:linear-gradient(180deg,#fff,#fff7e8)}.day-cell[data-status="pending"] small{background:var(--orange-soft);color:var(--orange)}.day-cell[data-status="external"]{background:linear-gradient(180deg,#fff,#f3edff)}.day-cell[data-status="external"] small{background:#eee6ff;color:var(--purple)}.day-cell.is-today{outline:2px solid rgba(109,61,244,.32);outline-offset:2px}.day-cell.is-empty{visibility:hidden}.day-cell[data-locked="true"]{cursor:not-allowed}@media(max-width:800px){.calendar-grid{grid-template-columns:repeat(2,1fr)}.weekday{display:none}.day-cell.is-empty{display:none}}@media(max-width:480px){.calendar-grid{grid-template-columns:1fr}.day-cell{min-height:88px}}</style></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Linek | التقويم</title><link rel="stylesheet" href="app.css"><style>.calendar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.calendar-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.legend-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:13px;font-weight:800;color:var(--muted)}.legend-dot{width:10px;height:10px;border-radius:50%;background:var(--green)}.legend-dot.blocked{background:#7a7482}.legend-dot.reserved{background:var(--blue)}.legend-dot.pending{background:var(--orange)}.legend-dot.external{background:var(--purple)}.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:9px}.weekday{padding:4px;color:var(--muted);font-size:12px;font-weight:900;text-align:center}.day-cell{min-height:104px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:10px;text-align:right;box-shadow:0 10px 24px rgba(31,26,46,.05);transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}.day-cell:hover{transform:translateY(-2px);border-color:#c9bbe9;box-shadow:0 16px 32px rgba(31,26,46,.09)}.day-cell b{display:block;font-size:22px}.day-cell small{display:inline-flex;margin-top:16px;padding:5px 8px;border-radius:999px;font-size:12px;font-weight:900}.day-cell[data-status="available"]{background:linear-gradient(180deg,#fff,#f0fbf4)}.day-cell[data-status="available"] small{background:var(--green-soft);color:var(--green)}.day-cell[data-status="blocked"]{background:linear-gradient(180deg,#fff,#f3f2f1)}.day-cell[data-status="blocked"] small{background:#eeeae6;color:#5e5963}.day-cell[data-status="reserved"]{background:linear-gradient(180deg,#fff,#edf5ff)}.day-cell[data-status="reserved"] small{background:#e1efff;color:#1d67aa}.day-cell[data-status="pending"]{background:linear-gradient(180deg,#fff,#fff7e8)}.day-cell[data-status="pending"] small{background:var(--orange-soft);color:var(--orange)}.day-cell[data-status="external"]{background:linear-gradient(180deg,#fff,#f3edff)}.day-cell[data-status="external"] small{background:#eee6ff;color:var(--purple)}.day-cell.is-today{outline:2px solid rgba(109,61,244,.32);outline-offset:2px}.day-cell.is-empty{visibility:hidden}.day-cell[data-locked="true"]{cursor:not-allowed}@media(max-width:800px){.calendar-grid{grid-template-columns:repeat(2,1fr)}.weekday{display:none}.day-cell.is-empty{display:none}}@media(max-width:480px){.calendar-grid{grid-template-columns:1fr}.day-cell{min-height:88px}}</style><link rel="stylesheet" href="owner-calendar.css"></head>
 <body>
   <main class="app-shell">
-    <header class="topbar"><a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a><nav><a href="dashboard.html">الملخص</a><a class="active" href="calendar.html">التقويم</a><a href="calendar-sync.html">ربط التقويم</a></nav><button class="button secondary" data-logout type="button">خروج</button></header>
+    <header class="topbar"><a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a><nav><a href="dashboard.html">الملخص</a><a class="active" href="calendar.html">التقويم</a><a href="calendar-sync.html">مزامنة التقويم</a></nav><button class="button secondary" data-logout type="button">خروج</button></header>
     <section class="dashboard-grid"><aside class="sidebar" id="sidebar"></aside><div class="stack">
       <section class="panel"><div class="panel-head"><div><span class="eyebrow">التوفر</span><h1>تقويم العقار</h1><p>اضغط على أي يوم لتبديله بين متاح ومغلق. الحجوزات والأيام القادمة من المنصات الثانية تظهر كحالة مقفلة.</p></div><div class="actions"><button class="button secondary" id="prevMonth" type="button">السابق</button><button class="button secondary" id="nextMonth" type="button">التالي</button></div></div><label class="field"><span>العقار</span><select id="propertySelect"></select></label><div class="calendar-legend"><span class="legend-pill"><i class="legend-dot"></i>متاح</span><span class="legend-pill"><i class="legend-dot blocked"></i>مغلق</span><span class="legend-pill"><i class="legend-dot reserved"></i>محجوز</span><span class="legend-pill"><i class="legend-dot pending"></i>بانتظار</span><span class="legend-pill"><i class="legend-dot external"></i>من منصة ثانية</span></div><div class="actions"><button class="button soft" data-bulk="blocked" type="button">إغلاق الشهر</button><button class="button soft" data-bulk="available" type="button">فتح الشهر</button></div></section>
       <section class="panel"><div class="calendar-toolbar"><h2 id="monthTitle">-</h2><small class="muted">تحديث فوري للحالة عند الضغط على اليوم</small></div><div class="calendar-grid" id="calendarGrid"></div></section>
@@ -29,9 +29,22 @@
       document.getElementById('propertySelect').innerHTML = OwnerTools.propertyOptions(properties);
       render();
     }
-    function iso(date) { return date.toISOString().slice(0, 10); }
+    function iso(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    function addDays(value, amount) {
+      const date = new Date(`${value}T00:00:00`);
+      date.setDate(date.getDate() + amount);
+      return iso(date);
+    }
     async function rowsForMonth(propertyId, start, end) {
       return Linek.db(`availability?select=*&property_id=eq.${encodeURIComponent(propertyId)}&date=gte.${iso(start)}&date=lt.${iso(end)}`);
+    }
+    async function bookingsForMonth(propertyId, start, end) {
+      return Linek.db(`bookings?select=id,status,check_in,check_out,guest_name,reference,public_code&property_id=eq.${encodeURIComponent(propertyId)}&check_in=lt.${iso(end)}&check_out=gt.${iso(start)}&status=in.(pending,confirmed)`);
     }
     async function setDay(propertyId, date, status) {
       const existing = await Linek.db(`availability?select=id&property_id=eq.${encodeURIComponent(propertyId)}&date=eq.${date}&limit=1`);
@@ -46,8 +59,17 @@
       const start = new Date(current.getFullYear(), current.getMonth(), 1);
       const end = new Date(current.getFullYear(), current.getMonth() + 1, 1);
       document.getElementById('monthTitle').textContent = new Intl.DateTimeFormat('ar-SA', {month: 'long', year: 'numeric'}).format(start);
-      const rows = await rowsForMonth(propertyId, start, end);
+      const [rows, monthBookings] = await Promise.all([
+        rowsForMonth(propertyId, start, end),
+        bookingsForMonth(propertyId, start, end)
+      ]);
       const byDate = Object.fromEntries(rows.map(row => [row.date, row.status]));
+      monthBookings.forEach(booking => {
+        const status = booking.status === 'confirmed' ? 'reserved' : 'pending';
+        for (let value = booking.check_in; value < booking.check_out; value = addDays(value, 1)) {
+          if (value >= iso(start) && value < iso(end)) byDate[value] = status;
+        }
+      });
       const weekdays = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
       const cells = weekdays.map(day => `<div class="weekday">${day}</div>`);
       for (let index = 0; index < start.getDay(); index += 1) cells.push('<div class="day-cell is-empty"></div>');

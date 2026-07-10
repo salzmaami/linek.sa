@@ -262,6 +262,120 @@ p, .muted { color: var(--muted); line-height: 1.8; }
 }
 .metric-card b { display: block; font-size: 26px; }
 .metric-card span, .card small { color: var(--muted); }
+.owner-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.donut-metric {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-height: 168px;
+  padding: 16px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  text-align: center;
+  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+.donut-metric:hover {
+  transform: translateY(-2px);
+  border-color: #d8cbff;
+  box-shadow: 0 18px 36px rgba(31, 26, 46, .1);
+}
+.metric-ring {
+  width: 104px;
+  height: 104px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, #fff 58%, transparent 60%),
+    conic-gradient(var(--metric-color) var(--metric-progress), #eee8e0 0);
+}
+.metric-ring b {
+  max-width: 76px;
+  color: var(--ink);
+  font-size: 19px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.donut-metric span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+}
+.booking-ticket {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+.booking-ticket[open] {
+  border-color: #d8cbff;
+  box-shadow: 0 14px 34px rgba(31, 26, 46, .08);
+}
+.booking-ticket summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  cursor: pointer;
+  list-style: none;
+}
+.booking-ticket summary::-webkit-details-marker {
+  display: none;
+}
+.booking-ticket summary:after {
+  content: "فتح التفاصيل";
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #f0ebff;
+  color: var(--purple);
+  font-size: 12px;
+  font-weight: 900;
+}
+.booking-ticket[open] summary:after {
+  content: "إغلاق";
+}
+.booking-ticket summary b,
+.booking-ticket summary small {
+  display: block;
+}
+.booking-ticket summary small {
+  margin-top: 4px;
+  color: var(--muted);
+}
+.ticket-body {
+  display: grid;
+  gap: 12px;
+  padding: 0 16px 16px;
+}
+.ticket-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.ticket-grid div {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffdf8;
+}
+.ticket-grid span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+.ticket-grid b {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
 .stack { display: grid; gap: 10px; }
 .actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 14px; }
 .badge {
@@ -567,6 +681,7 @@ p, .muted { color: var(--muted); line-height: 1.8; }
   .topbar { align-items: flex-start; flex-direction: column; position: static; }
   .topbar nav { margin: 0; }
   .hero-panel, .dashboard-grid, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .owner-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sidebar { position: static; grid-template-columns: repeat(2, 1fr); }
   .form-grid { grid-template-columns: 1fr; }
 }
@@ -576,6 +691,8 @@ p, .muted { color: var(--muted); line-height: 1.8; }
   .hero-panel, .panel { padding: 16px; }
   h1 { font-size: 36px; }
   .sidebar { grid-template-columns: 1fr; }
+  .owner-metrics, .ticket-grid { grid-template-columns: 1fr; }
+  .booking-ticket summary { align-items: flex-start; flex-direction: column; }
   .status-steps { grid-template-columns: 1fr; }
   .timer-ring-card { align-items: flex-start; }
   .timer-ring { width: 92px; height: 92px; }

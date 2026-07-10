@@ -14,6 +14,29 @@
   <script>
     document.getElementById('sidebar').innerHTML = OwnerTools.sidebar('booking-requests.html');
     let bookings = [];
+    const statusLabels = {
+      pending: 'بانتظار موافقتك',
+      confirmed: 'مؤكد',
+      rejected: 'مرفوض',
+      expired: 'منتهي',
+      cancelled: 'ملغي',
+      pending_payment: 'بانتظار الدفع'
+    };
+    function nights(booking) {
+      if (!booking.check_in || !booking.check_out) return 0;
+      return Math.max(1, Math.round((new Date(booking.check_out) - new Date(booking.check_in)) / 86400000));
+    }
+    function iso(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    function addDays(value, amount) {
+      const date = new Date(`${value}T00:00:00`);
+      date.setDate(date.getDate() + amount);
+      return iso(date);
+    }
     function remaining(booking) {
       if (booking.status !== 'pending') return booking.status;
       const ms = new Date(booking.expires_at).getTime() - Date.now();
@@ -31,13 +54,54 @@
       const status = document.getElementById('statusFilter').value;
       const search = document.getElementById('searchBox').value.trim().toLowerCase();
       const list = bookings.filter(booking => (!status || booking.status === status) && (!search || `${booking.guest_name} ${booking.guest_mobile || booking.guest_phone} ${booking.reference || booking.public_code}`.toLowerCase().includes(search)));
-      document.getElementById('bookingsList').innerHTML = list.map(booking => `<article class="card"><div class="panel-head"><div><b>${OwnerTools.escapeHtml(booking.guest_name)} · ${OwnerTools.escapeHtml(booking.reference || booking.public_code)}</b><small>${OwnerTools.escapeHtml(booking.guest_mobile || booking.guest_phone)} · ${OwnerTools.escapeHtml(booking.properties?.title || booking.properties?.name || '')} · ${OwnerTools.dateText(booking.check_in)} إلى ${OwnerTools.dateText(booking.check_out)} · ${OwnerTools.money(booking.total_price || booking.amount)}</small></div><span class="badge ${booking.status === 'pending' ? 'warn' : booking.status === 'rejected' ? 'danger' : ''}">${booking.status}</span></div><div class="notice ${booking.status === 'pending' ? 'warn' : ''}">المتبقي: <b data-countdown="${booking.id}">${remaining(booking)}</b></div><div class="actions"><button class="button" data-action="accept" data-id="${booking.id}" ${booking.status === 'pending' ? '' : 'disabled'}>قبول</button><button class="button danger" data-action="reject" data-id="${booking.id}" ${booking.status === 'pending' ? '' : 'disabled'}>رفض</button></div></article>`).join('') || '<div class="empty">لا توجد طلبات بهذه الحالة.</div>';
+      document.getElementById('bookingsList').innerHTML = list.map(booking => {
+        const badgeClass = booking.status === 'pending' ? 'warn' : booking.status === 'rejected' ? 'danger' : '';
+        const amount = OwnerTools.money(booking.total_price || booking.amount);
+        const stayNights = nights(booking);
+        return `<details class="booking-ticket ${booking.status === 'pending' ? 'is-pending' : ''}">
+          <summary>
+            <div>
+              <b>${OwnerTools.escapeHtml(booking.guest_name)}</b>
+              <small>${OwnerTools.escapeHtml(booking.reference || booking.public_code)} · ${OwnerTools.escapeHtml(booking.properties?.title || booking.properties?.name || '')}</small>
+            </div>
+            <span class="badge ${badgeClass}">${statusLabels[booking.status] || OwnerTools.escapeHtml(booking.status)}</span>
+          </summary>
+          <div class="ticket-body">
+            <div class="ticket-grid">
+              <div><span>الضيف</span><b>${OwnerTools.escapeHtml(booking.guest_name)}</b></div>
+              <div><span>الجوال</span><b>${OwnerTools.escapeHtml(booking.guest_mobile || booking.guest_phone || '-')}</b></div>
+              <div><span>العقار</span><b>${OwnerTools.escapeHtml(booking.properties?.title || booking.properties?.name || '-')}</b></div>
+              <div><span>رقم الطلب</span><b dir="ltr">${OwnerTools.escapeHtml(booking.reference || booking.public_code || '-')}</b></div>
+              <div><span>الدخول</span><b>${OwnerTools.dateText(booking.check_in)}</b></div>
+              <div><span>الخروج</span><b>${OwnerTools.dateText(booking.check_out)}</b></div>
+              <div><span>عدد الليالي</span><b>${stayNights} ${stayNights === 1 ? 'ليلة' : 'ليالي'}</b></div>
+              <div><span>المبلغ</span><b>${amount}</b></div>
+            </div>
+            <div class="notice ${booking.status === 'pending' ? 'warn' : ''}">المتبقي لقبول الطلب: <b data-countdown="${booking.id}">${remaining(booking)}</b></div>
+            ${booking.notes ? `<div class="notice">ملاحظات الضيف: ${OwnerTools.escapeHtml(booking.notes)}</div>` : ''}
+            <div class="actions"><button class="button" data-action="accept" data-id="${booking.id}" ${booking.status === 'pending' ? '' : 'disabled'}>قبول الطلب</button><button class="button danger" data-action="reject" data-id="${booking.id}" ${booking.status === 'pending' ? '' : 'disabled'}>رفض الطلب</button></div>
+          </div>
+        </details>`;
+      }).join('') || '<div class="empty">لا توجد طلبات بهذه الحالة.</div>';
+    }
+    async function setAvailabilityDay(propertyId, date, status) {
+      const existing = await Linek.db(`availability?select=id&property_id=eq.${encodeURIComponent(propertyId)}&date=eq.${date}&limit=1`);
+      const body = {property_id: propertyId, date, status};
+      if (existing.length) await Linek.db(`availability?id=eq.${existing[0].id}`, {method: 'PATCH', body});
+      else await Linek.db('availability', {method: 'POST', body});
+    }
+    async function reserveBookingDates(booking) {
+      if (!booking.property_id || !booking.check_in || !booking.check_out) return;
+      for (let value = booking.check_in; value < booking.check_out; value = addDays(value, 1)) {
+        await setAvailabilityDay(booking.property_id, value, 'reserved');
+      }
     }
     async function updateBooking(id, status) {
       const booking = bookings.find(item => item.id === id);
       if (!booking || booking.status !== 'pending') return;
       if (new Date(booking.expires_at).getTime() <= Date.now()) throw new Error('انتهت مهلة هذا الطلب');
       await Linek.db(`bookings?id=eq.${encodeURIComponent(id)}&owner_profile_id=eq.${encodeURIComponent(booking.owner_profile_id)}`, {method: 'PATCH', body: {status, payment_status: status === 'confirmed' ? 'waiting_for_payment' : 'cancelled', decided_at: new Date().toISOString()}});
+      if (status === 'confirmed') await reserveBookingDates(booking);
       await Linek.db('booking_events', {method: 'POST', body: {booking_id: id, event_type: status === 'confirmed' ? 'Owner Accepted' : 'Owner Rejected', notes: status === 'confirmed' ? 'وافق المالك على الطلب.' : 'رفض المالك الطلب.'}});
     }
     document.body.addEventListener('click', async event => {

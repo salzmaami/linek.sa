@@ -1,0 +1,70 @@
+.calendar-grid {
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+}
+
+.weekday {
+  display: block !important;
+  padding: 2px !important;
+  font-size: 11px !important;
+}
+
+.day-cell {
+  min-height: 68px !important;
+  padding: 8px !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+
+.day-cell b {
+  font-size: 18px !important;
+}
+
+.day-cell small {
+  margin-top: 10px !important;
+  padding: 4px 7px !important;
+  font-size: 11px !important;
+}
+
+.day-cell[data-status="reserved"] {
+  border-color: #b9dafc;
+}
+
+.day-cell[data-status="pending"] {
+  border-color: #f0d091;
+}
+
+.day-cell[data-status="blocked"],
+.day-cell[data-status="external"] {
+  border-color: #d8d2dc;
+}
+
+@media (max-width: 700px) {
+  .calendar-grid {
+    gap: 4px !important;
+  }
+
+  .weekday {
+    font-size: 9px !important;
+  }
+
+  .day-cell {
+    min-height: 48px !important;
+    padding: 5px 3px !important;
+  }
+
+  .day-cell b {
+    font-size: 14px !important;
+  }
+
+  .day-cell small {
+    margin-top: 5px !important;
+    padding: 3px 5px !important;
+    font-size: 8px !important;
+  }
+
+  .day-cell.is-empty {
+    display: block !important;
+    visibility: hidden !important;
+  }
+}

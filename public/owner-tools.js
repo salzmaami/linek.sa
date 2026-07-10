@@ -3,7 +3,7 @@ const OwnerTools = (() => {
     ['dashboard.html', 'الملخص'],
     ['properties.html', 'العقارات'],
     ['calendar.html', 'التقويم'],
-    ['calendar-sync.html', 'ربط التقويم'],
+    ['calendar-sync.html', 'مزامنة التقويم'],
     ['booking-requests.html', 'طلبات الحجز'],
     ['payment-settings.html', 'إعدادات الدفع']
   ];
