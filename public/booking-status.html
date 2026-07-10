@@ -8,7 +8,7 @@
 </head>
 <body>
   <main class="app-shell">
-    <header class="topbar"><a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a><nav><a href="index.html">الرئيسية</a><a class="active" href="booking-status.html">حالة الحجز</a></nav></header>
+    <header class="topbar"><a class="brand" href="index.html"><img src="assets/linek-mark.svg" alt=""><span>لاينك</span></a><nav><a id="bookingPageLink" href="stay.html">صفحة الحجز</a><a class="active" href="booking-status.html">حالة الحجز</a></nav></header>
     <section class="hero-panel booking-status-hero">
       <div class="status-copy">
         <span class="eyebrow">حالة الطلب</span>
@@ -90,6 +90,10 @@
         'Booking Expired': 'انتهت مهلة الطلب'
       }[type] || type || 'حدث';
     }
+    function bookingPageHref() {
+      const slug = booking?.properties?.slug;
+      return slug ? `stay.html?slug=${encodeURIComponent(slug)}` : 'stay.html';
+    }
     function updateTimerUi(value, progress, note) {
       document.getElementById('timer').textContent = value;
       document.getElementById('timerCard').style.setProperty('--timer-progress', `${Math.max(0, Math.min(360, progress))}deg`);
@@ -140,13 +144,14 @@
       document.getElementById('ticketRef').textContent = booking.reference || booking.public_code || '--';
       document.getElementById('statusTitle').textContent = copy[0];
       document.getElementById('statusMessage').textContent = copy[1];
+      document.getElementById('bookingPageLink').href = bookingPageHref();
       document.querySelectorAll('#steps span').forEach(step => {
         step.classList.toggle('active', activeSteps.includes(step.dataset.step));
       });
       const payment = booking.payment_link_snapshot
         ? `<a class="button" href="${booking.payment_link_snapshot}" target="_blank" rel="noopener">فتح رابط دفع المالك</a>`
         : '<span class="notice">لا يوجد رابط دفع. اتبع تعليمات المالك عند التواصل.</span>';
-      document.getElementById('guestActions').innerHTML = booking.status === 'confirmed' || booking.status === 'pending' ? payment : '<a class="button" href="stay.html">اختيار تاريخ جديد</a>';
+      document.getElementById('guestActions').innerHTML = booking.status === 'confirmed' || booking.status === 'pending' ? payment : `<a class="button" href="${bookingPageHref()}">اختيار تاريخ جديد</a>`;
       document.getElementById('bookingSummary').innerHTML = [
         ['رقم الطلب', booking.reference || booking.public_code],
         ['العقار', booking.properties?.title || booking.properties?.name || '-'],
@@ -173,7 +178,7 @@
           total_price: 850,
           amount: 850,
           payment_instructions_snapshot: 'تظهر وسيلة الدفع الخاصة بالمالك بعد الموافقة.',
-          properties: {title: 'شاليه سكون', name: 'شاليه سكون'}
+          properties: {title: 'شاليه سكون', name: 'شاليه سكون', slug: 'sukoon'}
         },
         events: [
           {event_type: 'تم إرسال الطلب', created_at: new Date(now - (8 * 60 * 1000)).toISOString(), notes: 'وصل طلب الحجز وينتظر قرار المالك'},
