@@ -57,10 +57,16 @@
     let booking = null;
     function money(value) { return `${Number(value || 0).toLocaleString('ar-SA')} ر.س`; }
     function dateText(value) { return value ? new Intl.DateTimeFormat('ar-SA', {dateStyle: 'medium'}).format(new Date(value)) : '-'; }
+    function isFinalConfirmed() {
+      return booking?.status === 'confirmed' && booking?.payment_status === 'paid_confirmed';
+    }
     function statusCopy(status) {
+      if (status === 'confirmed' && isFinalConfirmed()) {
+        return ['تم تأكيد الحجز نهائياً', 'اكتملت حالة الحجز بعد موافقة المالك وتأكيده النهائي.'];
+      }
       return {
         pending: ['طلبك بانتظار موافقة المالك', 'يبقى الطلب محجوزاً مؤقتاً لمدة 30 دقيقة.'],
-        confirmed: ['تم تأكيد حجزك', 'وافق المالك على الطلب. اتبع تعليمات الدفع الخاصة بالمالك.'],
+        confirmed: ['وافق المالك على طلبك', 'اتبع تعليمات الدفع أو التواصل الخاصة بالمالك حتى يتم تأكيد الحجز نهائياً.'],
         rejected: ['تم رفض طلب الحجز', 'يمكنك اختيار موعد آخر أو التواصل مع المالك.'],
         expired: ['انتهت مهلة الطلب', 'يمكنك إرسال طلب حجز جديد بتواريخ متاحة.'],
         cancelled: ['تم إلغاء الحجز', 'هذا الطلب لم يعد نشطاً.']
@@ -87,8 +93,14 @@
         'Booking Created': 'تم إنشاء طلب الحجز',
         'Owner Accepted': 'وافق المالك',
         'Owner Rejected': 'رفض المالك',
+        'Booking Final Confirmed': 'تم تأكيد الحجز نهائياً',
         'Booking Expired': 'انتهت مهلة الطلب'
       }[type] || type || 'حدث';
+    }
+    function finalCopy() {
+      if (isFinalConfirmed()) return ['تم التأكيد', 'الحجز مؤكد نهائياً', 'success'];
+      if (['rejected', 'expired', 'cancelled'].includes(booking.status)) return ['نهائي', 'اكتملت الحالة', booking.status === 'expired' ? 'warn' : 'danger'];
+      return ['نهائي', 'بانتظار التأكيد', ''];
     }
     function bookingPageHref() {
       const slug = booking?.properties?.slug;
@@ -102,9 +114,9 @@
     function renderTimer() {
       if (!booking || booking.status !== 'pending') {
         updateTimerUi(
-          booking?.status === 'confirmed' ? 'مقبول' : '00:00',
+          isFinalConfirmed() ? 'مؤكد' : booking?.status === 'confirmed' ? 'مقبول' : '00:00',
           booking?.status === 'confirmed' ? 360 : 0,
-          booking?.status === 'confirmed' ? 'وافق المالك على الطلب.' : 'لا توجد مهلة نشطة لهذا الطلب.'
+          isFinalConfirmed() ? 'تم تأكيد الحجز نهائياً.' : booking?.status === 'confirmed' ? 'وافق المالك على الطلب.' : 'لا توجد مهلة نشطة لهذا الطلب.'
         );
         return;
       }
@@ -130,17 +142,23 @@
       const copy = statusCopy(booking.status);
       const activeSteps = {
         pending: ['submitted', 'pending'],
-        confirmed: ['submitted', 'pending', 'decision', 'final'],
+        confirmed: isFinalConfirmed() ? ['submitted', 'pending', 'decision', 'final'] : ['submitted', 'pending', 'decision'],
         rejected: ['submitted', 'pending', 'decision', 'final'],
         expired: ['submitted', 'pending', 'decision', 'final'],
         cancelled: ['submitted', 'pending', 'decision', 'final']
       }[booking.status] || ['submitted'];
       const decision = decisionCopy(booking.status);
       const decisionStep = document.querySelector('#steps [data-step="decision"]');
+      const final = finalCopy();
+      const finalStep = document.querySelector('#steps [data-step="final"]');
       decisionStep.querySelector('b').textContent = decision[0];
       decisionStep.querySelector('small').textContent = decision[1];
       decisionStep.classList.remove('success', 'danger', 'warn');
       if (decision[2]) decisionStep.classList.add(decision[2]);
+      finalStep.querySelector('b').textContent = final[0];
+      finalStep.querySelector('small').textContent = final[1];
+      finalStep.classList.remove('success', 'danger', 'warn');
+      if (final[2]) finalStep.classList.add(final[2]);
       document.getElementById('ticketRef').textContent = booking.reference || booking.public_code || '--';
       document.getElementById('statusTitle').textContent = copy[0];
       document.getElementById('statusMessage').textContent = copy[1];
@@ -151,7 +169,7 @@
       const payment = booking.payment_link_snapshot
         ? `<a class="button" href="${booking.payment_link_snapshot}" target="_blank" rel="noopener">فتح رابط دفع المالك</a>`
         : '<span class="notice">لا يوجد رابط دفع. اتبع تعليمات المالك عند التواصل.</span>';
-      document.getElementById('guestActions').innerHTML = booking.status === 'confirmed' || booking.status === 'pending' ? payment : `<a class="button" href="${bookingPageHref()}">اختيار تاريخ جديد</a>`;
+      document.getElementById('guestActions').innerHTML = booking.status === 'confirmed' || booking.status === 'pending' ? (isFinalConfirmed() ? '<span class="notice success">تم تأكيد الحجز نهائياً من المالك.</span>' : payment) : `<a class="button" href="${bookingPageHref()}">اختيار تاريخ جديد</a>`;
       document.getElementById('bookingSummary').innerHTML = [
         ['رقم الطلب', booking.reference || booking.public_code],
         ['العقار', booking.properties?.title || booking.properties?.name || '-'],

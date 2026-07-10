@@ -22,6 +22,33 @@
       cancelled: 'ملغي',
       pending_payment: 'بانتظار الدفع'
     };
+    function displayStatus(booking) {
+      if (booking.status === 'confirmed' && booking.payment_status === 'paid_confirmed') return 'مؤكد نهائياً';
+      return statusLabels[booking.status] || booking.status;
+    }
+    function statusBadgeClass(booking) {
+      if (booking.status === 'pending') return 'warn';
+      if (['rejected', 'cancelled', 'expired'].includes(booking.status)) return 'danger';
+      return '';
+    }
+    function statusNotice(booking) {
+      if (booking.status === 'pending') return `المتبقي لقبول الطلب: <b data-countdown="${booking.id}">${remaining(booking)}</b>`;
+      if (booking.status === 'confirmed' && booking.payment_status === 'paid_confirmed') return 'تم تأكيد الحجز نهائياً وانعكس ذلك في صفحة الضيف.';
+      if (booking.status === 'confirmed') return 'وافق المالك على الطلب. بقي تأكيد الحجز النهائي بعد إكمال الترتيب مع الضيف.';
+      return `حالة الطلب: <b>${displayStatus(booking)}</b>`;
+    }
+    function actionButtons(booking) {
+      if (booking.status === 'pending') {
+        return `<button class="button" data-action="accept" data-id="${booking.id}">قبول الطلب</button><button class="button danger" data-action="reject" data-id="${booking.id}">رفض الطلب</button>`;
+      }
+      if (booking.status === 'confirmed' && booking.payment_status !== 'paid_confirmed') {
+        return `<button class="button" data-action="finalize" data-id="${booking.id}">تأكيد الحجز النهائي</button>`;
+      }
+      if (booking.status === 'confirmed' && booking.payment_status === 'paid_confirmed') {
+        return '<button class="button secondary" type="button" disabled>تم تأكيد الحجز</button>';
+      }
+      return '<button class="button secondary" type="button" disabled>لا يوجد إجراء متاح</button>';
+    }
     function nights(booking) {
       if (!booking.check_in || !booking.check_out) return 0;
       return Math.max(1, Math.round((new Date(booking.check_out) - new Date(booking.check_in)) / 86400000));
@@ -55,7 +82,7 @@
       const search = document.getElementById('searchBox').value.trim().toLowerCase();
       const list = bookings.filter(booking => (!status || booking.status === status) && (!search || `${booking.guest_name} ${booking.guest_mobile || booking.guest_phone} ${booking.reference || booking.public_code}`.toLowerCase().includes(search)));
       document.getElementById('bookingsList').innerHTML = list.map(booking => {
-        const badgeClass = booking.status === 'pending' ? 'warn' : booking.status === 'rejected' ? 'danger' : '';
+        const badgeClass = statusBadgeClass(booking);
         const amount = OwnerTools.money(booking.total_price || booking.amount);
         const stayNights = nights(booking);
         return `<details class="booking-ticket ${booking.status === 'pending' ? 'is-pending' : ''}">
@@ -64,7 +91,7 @@
               <b>${OwnerTools.escapeHtml(booking.guest_name)}</b>
               <small>${OwnerTools.escapeHtml(booking.reference || booking.public_code)} · ${OwnerTools.escapeHtml(booking.properties?.title || booking.properties?.name || '')}</small>
             </div>
-            <span class="badge ${badgeClass}">${statusLabels[booking.status] || OwnerTools.escapeHtml(booking.status)}</span>
+            <span class="badge ${badgeClass}">${OwnerTools.escapeHtml(displayStatus(booking))}</span>
           </summary>
           <div class="ticket-body">
             <div class="ticket-grid">
@@ -77,9 +104,9 @@
               <div><span>عدد الليالي</span><b>${stayNights} ${stayNights === 1 ? 'ليلة' : 'ليالي'}</b></div>
               <div><span>المبلغ</span><b>${amount}</b></div>
             </div>
-            <div class="notice ${booking.status === 'pending' ? 'warn' : ''}">المتبقي لقبول الطلب: <b data-countdown="${booking.id}">${remaining(booking)}</b></div>
+            <div class="notice ${booking.status === 'pending' ? 'warn' : booking.payment_status === 'paid_confirmed' ? 'success' : ''}">${statusNotice(booking)}</div>
             ${booking.notes ? `<div class="notice">ملاحظات الضيف: ${OwnerTools.escapeHtml(booking.notes)}</div>` : ''}
-            <div class="actions"><button class="button" data-action="accept" data-id="${booking.id}" ${booking.status === 'pending' ? '' : 'disabled'}>قبول الطلب</button><button class="button danger" data-action="reject" data-id="${booking.id}" ${booking.status === 'pending' ? '' : 'disabled'}>رفض الطلب</button></div>
+            <div class="actions">${actionButtons(booking)}</div>
           </div>
         </details>`;
       }).join('') || '<div class="empty">لا توجد طلبات بهذه الحالة.</div>';
@@ -104,12 +131,19 @@
       if (status === 'confirmed') await reserveBookingDates(booking);
       await Linek.db('booking_events', {method: 'POST', body: {booking_id: id, event_type: status === 'confirmed' ? 'Owner Accepted' : 'Owner Rejected', notes: status === 'confirmed' ? 'وافق المالك على الطلب.' : 'رفض المالك الطلب.'}});
     }
+    async function finalizeBooking(id) {
+      const booking = bookings.find(item => item.id === id);
+      if (!booking || booking.status !== 'confirmed') return;
+      await Linek.db(`bookings?id=eq.${encodeURIComponent(id)}&owner_profile_id=eq.${encodeURIComponent(booking.owner_profile_id)}`, {method: 'PATCH', body: {payment_status: 'paid_confirmed', decided_at: booking.decided_at || new Date().toISOString()}});
+      await Linek.db('booking_events', {method: 'POST', body: {booking_id: id, event_type: 'Booking Final Confirmed', notes: 'أكد المالك الحجز نهائياً.'}});
+    }
     document.body.addEventListener('click', async event => {
       const button = event.target.closest('[data-action]');
       if (!button) return;
       Linek.setLoading(button, true);
       try {
-        await updateBooking(button.dataset.id, button.dataset.action === 'accept' ? 'confirmed' : 'rejected');
+        if (button.dataset.action === 'finalize') await finalizeBooking(button.dataset.id);
+        else await updateBooking(button.dataset.id, button.dataset.action === 'accept' ? 'confirmed' : 'rejected');
         Linek.toast('تم تحديث الطلب');
         await load();
       } catch (error) { Linek.toast(error.message); } finally { Linek.setLoading(button, false); }
