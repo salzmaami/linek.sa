@@ -135,7 +135,7 @@
       const booking = bookings.find(item => item.id === id);
       if (!booking || booking.status !== 'confirmed') return;
       await Linek.db(`bookings?id=eq.${encodeURIComponent(id)}&owner_profile_id=eq.${encodeURIComponent(booking.owner_profile_id)}`, {method: 'PATCH', body: {payment_status: 'paid_confirmed', decided_at: booking.decided_at || new Date().toISOString()}});
-      await Linek.db('booking_events', {method: 'POST', body: {booking_id: id, event_type: 'Booking Final Confirmed', notes: 'أكد المالك الحجز نهائياً.'}});
+      await Linek.db('booking_events', {method: 'POST', body: {booking_id: id, event_type: 'Owner Accepted', notes: 'تم تأكيد الحجز نهائياً من المالك.'}});
     }
     document.body.addEventListener('click', async event => {
       const button = event.target.closest('[data-action]');

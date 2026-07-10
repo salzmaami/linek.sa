@@ -88,7 +88,8 @@
       if (/expire|انته|مهلة/.test(text)) return 'warn';
       return '';
     }
-    function eventLabel(type) {
+    function eventLabel(type, notes = '') {
+      if (type === 'Owner Accepted' && /نهائي|تأكيد/.test(notes)) return 'تم تأكيد الحجز نهائياً';
       return {
         'Booking Created': 'تم إنشاء طلب الحجز',
         'Owner Accepted': 'وافق المالك',
@@ -178,7 +179,7 @@
         ['المبلغ التقديري', money(booking.total_price || booking.amount)],
         ['تعليمات الدفع', booking.payment_instructions_snapshot || 'تظهر حسب وسيلة دفع المالك']
       ].map(([label, value]) => `<div class="ticket-row"><small>${label}</small><b>${value}</b></div>`).join('');
-      document.getElementById('eventsList').innerHTML = (data.events || []).map(event => `<div class="event-item ${eventTone(event)}"><b>${eventLabel(event.event_type)}</b><small>${dateText(event.created_at)} · ${event.notes || ''}</small></div>`).join('') || '<div class="empty">لا توجد أحداث بعد.</div>';
+      document.getElementById('eventsList').innerHTML = (data.events || []).map(event => `<div class="event-item ${eventTone(event)}"><b>${eventLabel(event.event_type, event.notes || '')}</b><small>${dateText(event.created_at)} · ${event.notes || ''}</small></div>`).join('') || '<div class="empty">لا توجد أحداث بعد.</div>';
       renderTimer();
     }
     function demoData() {
