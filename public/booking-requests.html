@@ -34,8 +34,20 @@
     function statusNotice(booking) {
       if (booking.status === 'pending') return `المتبقي لقبول الطلب: <b data-countdown="${booking.id}">${remaining(booking)}</b>`;
       if (booking.status === 'confirmed' && booking.payment_status === 'paid_confirmed') return 'تم تأكيد الحجز نهائياً وانعكس ذلك في صفحة الضيف.';
-      if (booking.status === 'confirmed') return 'وافق المالك على الطلب. بقي تأكيد الحجز النهائي بعد إكمال الترتيب مع الضيف.';
+      if (booking.status === 'confirmed' && booking.payment_link_snapshot) return 'رابط الدفع ظاهر للضيف. بعد التأكد من الدفع اضغط تأكيد الحجز النهائي.';
+      if (booking.status === 'confirmed') return 'وافق المالك على الطلب. أضف رابط دفع خاص بهذا الطلب ثم أرسله للضيف من صفحة الحالة.';
       return `حالة الطلب: <b>${displayStatus(booking)}</b>`;
+    }
+    function paymentLinkEditor(booking) {
+      if (booking.status !== 'confirmed' || booking.payment_status === 'paid_confirmed') return '';
+      return `<div class="notice">
+        <b>رابط دفع هذا الطلب</b>
+        <small>أنشئ فاتورة من حساب المالك بنفس المبلغ، ثم الصق الرابط هنا ليظهر للضيف.</small>
+        <div class="actions">
+          <input data-payment-link="${booking.id}" type="url" dir="ltr" placeholder="https://..." value="${OwnerTools.escapeHtml(booking.payment_link_snapshot || '')}">
+          <button class="button secondary" data-action="save-payment-link" data-id="${booking.id}" type="button">حفظ رابط الدفع</button>
+        </div>
+      </div>`;
     }
     function actionButtons(booking) {
       if (booking.status === 'pending') {
@@ -106,6 +118,7 @@
             </div>
             <div class="notice ${booking.status === 'pending' ? 'warn' : booking.payment_status === 'paid_confirmed' ? 'success' : ''}">${statusNotice(booking)}</div>
             ${booking.notes ? `<div class="notice">ملاحظات الضيف: ${OwnerTools.escapeHtml(booking.notes)}</div>` : ''}
+            ${paymentLinkEditor(booking)}
             <div class="actions">${actionButtons(booking)}</div>
           </div>
         </details>`;
@@ -137,12 +150,27 @@
       await Linek.db(`bookings?id=eq.${encodeURIComponent(id)}&owner_profile_id=eq.${encodeURIComponent(booking.owner_profile_id)}`, {method: 'PATCH', body: {payment_status: 'paid_confirmed', decided_at: booking.decided_at || new Date().toISOString()}});
       await Linek.db('booking_events', {method: 'POST', body: {booking_id: id, event_type: 'Owner Accepted', notes: 'تم تأكيد الحجز نهائياً من المالك.'}});
     }
+    async function savePaymentLink(id) {
+      const booking = bookings.find(item => item.id === id);
+      const input = document.querySelector(`[data-payment-link="${CSS.escape(id)}"]`);
+      const paymentLink = input?.value.trim();
+      if (!booking || booking.status !== 'confirmed') return;
+      if (!paymentLink) throw new Error('أضف رابط الدفع أولاً');
+      try {
+        new URL(paymentLink);
+      } catch (_) {
+        throw new Error('رابط الدفع غير صحيح');
+      }
+      await Linek.db(`bookings?id=eq.${encodeURIComponent(id)}&owner_profile_id=eq.${encodeURIComponent(booking.owner_profile_id)}`, {method: 'PATCH', body: {payment_link_snapshot: paymentLink, payment_status: 'waiting_for_payment'}});
+      await Linek.db('booking_events', {method: 'POST', body: {booking_id: id, event_type: 'Payment Link Viewed', notes: 'تم إضافة رابط دفع خاص بهذا الطلب.'}});
+    }
     document.body.addEventListener('click', async event => {
       const button = event.target.closest('[data-action]');
       if (!button) return;
       Linek.setLoading(button, true);
       try {
         if (button.dataset.action === 'finalize') await finalizeBooking(button.dataset.id);
+        else if (button.dataset.action === 'save-payment-link') await savePaymentLink(button.dataset.id);
         else await updateBooking(button.dataset.id, button.dataset.action === 'accept' ? 'confirmed' : 'rejected');
         Linek.toast('تم تحديث الطلب');
         await load();

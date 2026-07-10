@@ -385,6 +385,20 @@ p, .muted { color: var(--muted); line-height: 1.8; }
 }
 .stack { display: grid; gap: 10px; }
 .actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 14px; }
+.actions input {
+  flex: 1 1 260px;
+  min-height: 44px;
+  padding: 12px 13px;
+  border: 1px solid #dad4ce;
+  border-radius: 8px;
+  background: #fffefa;
+  color: var(--ink);
+  outline: none;
+}
+.actions input:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(109, 61, 244, .12);
+}
 .badge {
   display: inline-flex;
   width: max-content;
