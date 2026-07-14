@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f8f7f3" />
-    <meta name="description" content="لاينك بوكنق من Linek يجهز صفحة حجز موثقة للشاليهات والشقق اليومية تبني ثقة الضيف قبل الدفع، مع توثيق مقدم الخدمة ووسيلة استلام المدفوعات وفق معايير Linek." />
+    <meta name="description" content="لاينك بوكنق من Linek يحول رسائل واتساب المتفرقة إلى صفحة حجز موثقة باسم مكانك، تعرض الصور والتوفر والسياسات وتبني ثقة الضيف قبل الدفع." />
     <title>لاينك بوكنق | صفحة حجز موثقة للشاليهات والشقق اليومية</title>
     <link rel="icon" href="assets/linek-mark.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -28,7 +28,7 @@
       </nav>
       <div class="nav-actions">
         <a class="text-action" href="login.html">دخول الشركاء</a>
-        <a class="pill-button small" href="register.html">ابدأ الآن</a>
+        <a class="pill-button small" href="owner-apply.html?plan=single">ابدأ 14 يوم بدون بطاقة</a>
       </div>
     </header>
 
@@ -37,78 +37,100 @@
         <div class="hero-orb orb-one"></div>
         <div class="hero-orb orb-two"></div>
         <span class="eyebrow">لأصحاب الشاليهات والشقق اليومية</span>
-        <h1>صفحة حجز موثقة<br /><mark>تبني ثقة ضيوفك</mark><br /><mark>قبل الدفع</mark></h1>
-        <p>لاينك بوكنق من Linek لا يبيع رابط دفع فقط. نساعدك تعرض مكانك بصفحة حجز احترافية تساعد ضيفك يفهم من يتعامل معه، لماذا الحجز موثوق، وكيف يتم الدفع لحسابك حسب التكامل المتاح قبل أن يدفع.</p>
-        <button class="pill-button hero-cta" data-start-plan="single">ابدأ تجربتك 14 يوم</button>
+        <h1>حوّل رسائل واتساب المتكررة<br /><mark>إلى صفحة حجز موثقة</mark></h1>
+        <p>Linek ليست منصة تعرض مكانك وسط خيارات كثيرة. هي قناة خاصة باسم مكانك تنشرها لعملائك، تجمع الصور والتوفر والسياسات ومعنى التوثيق في رابط واحد يساعد الضيف يثق قبل الدفع.</p>
+        <a class="pill-button hero-cta" href="owner-apply.html?plan=single">ابدأ تجربتك 14 يوم بدون بطاقة ائتمان</a>
         <div class="hero-trust">
           <span><b data-trial-days>14 يوم</b> تجربة</span>
           <i></i>
           <span><b>موثق</b> من Linek</span>
           <i></i>
-          <span><b>اشتراك</b> شهري واضح</span>
+          <span><b>مدفوعات الضيف</b> لحسابك</span>
         </div>
+      </section>
 
-        <div class="product-stage" id="product">
-          <div class="stage-glow"></div>
-          <div class="booking-window">
-            <div class="window-bar">
-              <div class="mini-brand"><img src="assets/linek-mark.svg" alt="" /><span>لاينك بوكنق</span></div>
-              <span class="window-url">linek.sa/stay/sukoon</span>
-              <div class="window-dots"><i></i><i></i><i></i></div>
-            </div>
-            <div class="window-content">
-              <div class="place-photo">
-                <img src="assets/chalet-hero.png" alt="شاليه حديث في العمارية" />
-                <span class="available"><i></i> متاح هذا الأسبوع</span>
-              </div>
-              <div class="place-details">
-                <div>
-                  <small>العمارية، الرياض</small>
-                  <div class="place-title-row">
-                    <h2 id="screenPlaceName">شاليه سُكون</h2>
-                    <a class="verified-badge" href="#verified" aria-label="معنى موثق من Linek"><span>✓</span> موثق من <span class="verified-linek-word"><img src="assets/linek-mark.svg" alt="" /><b>Linek</b></span></a>
-                  </div>
-                  <p id="screenPrompt">اختر تاريخك المناسب</p>
-                </div>
-                <div class="booking-trust-card" aria-label="لماذا هذا الحجز موثوق؟">
-                  <h3>لماذا هذا الحجز موثوق؟</h3>
-                  <ul>
-                    <li>تم التحقق من مقدم الخدمة وفق معايير Linek.</li>
-                    <li>تم التحقق من وسيلة استلام المدفوعات.</li>
-                    <li>الحجز يتم عبر صفحة آمنة وواضحة.</li>
-                    <li>يوجد دعم من Linek عند الحاجة.</li>
-                  </ul>
-                  <a href="#verified">ما معنى موثق من Linek؟</a>
-                </div>
-                <div class="price-box"><small>يبدأ من</small><strong>850 <i>ر.س</i></strong><button id="screenAction">عرض الأيام المتاحة</button></div>
-              </div>
-            </div>
-          </div>
-          <div class="floating-card payment-card"><span>✓</span><div><small>وسيلة دفع متحقق منها</small><b>1,700 ر.س</b></div></div>
-          <div class="floating-card booking-card"><span>03</span><div><small>حجوزات اليوم</small><b>كلها مؤكدة</b></div></div>
+      <section class="positioning-strip section-shell" aria-labelledby="positioningTitle">
+        <div class="positioning-copy">
+          <span>مين حنا باختصار؟</span>
+          <h2 id="positioningTitle">مو منصة حجوزات ثانية.<br /><mark>Linek شريكك التقني</mark></h2>
+          <p>نزيد ثقة عملائك فيك: نراجع بياناتك ومكانك، نجهز لك صفحة خاصة باسم مكانك، ونرتب مسار دفع تقني يروح لحسابك مباشرة حسب التكامل المتاح.</p>
+          <strong>الزبدة: أنت تسعّر مكانك براحتك. ما نشاركك في مبلغ الحجز، وما تحتاج ترفع السعر عشان تغطي نسب عالية مثل بعض المنصات.</strong>
+        </div>
+        <div class="positioning-points" aria-label="كيف Linek يختلف">
+          <article><small>01</small><b>نتحقق منك ومن مكانك</b><p>قبل ما تظهر شارة التوثيق للضيف، نراجع الأساسيات التي ترفع الثقة قبل الدفع.</p></article>
+          <article><small>02</small><b>نعطيك صفحة باسمك</b><p>رابط واحد تنشره في واتساب وإنستقرام بدل الصور والأسعار والردود المتكررة.</p></article>
+          <article><small>03</small><b>الدفع لحسابك</b><p>مبالغ حجوزات الضيوف لا تدخل حساب Linek في نموذج البداية.</p></article>
+          <article><small>04</small><b>اشتراك تقني واضح</b><p>Linek رسومه اشتراك بعد التجربة، وليس نسبة على كل حجز من حلالك.</p></article>
         </div>
       </section>
 
       <section class="clients-strip" aria-label="مزايا سريعة">
-        <p>من محادثة واتساب مجهولة إلى صفحة حجز موثقة</p>
-        <div><span>توثيق مقدم الخدمة</span><span>بطاقة ثقة قبل الدفع</span><span>دفع مرتبط بحسابك</span><span>دعم Linek عند الحاجة</span></div>
+        <p>من رسائل متفرقة وأسئلة متكررة إلى رابط واضح باسم مكانك</p>
+        <div><span>صفحة خاصة بك</span><span>شارة موثق من Linek</span><span>سياسات وتوفر واضح</span><span>دفع مرتبط بحسابك</span></div>
       </section>
 
       <section class="features section-shell" id="features">
         <div class="section-heading centered">
           <span>الثقة تبدأ قبل الدفع</span>
-          <h2>لا تجعل ضيفك يدفع<br />لـ<mark>شخص مجهول</mark></h2>
-          <p>Linek يحول تجربة الحجز من رابط عادي إلى صفحة موثقة: اسم مكان واضح، مقدم خدمة تم التحقق منه، وسيلة دفع مراجعة، وسياسات ظاهرة قبل قرار الدفع.</p>
+          <h2 class="replace-heading">بدل ما ترسل لكل عميل <span class="cancel-word">الصور</span> <span class="cancel-word">الأسعار</span> <span class="cancel-word">التواريخ</span> <span class="cancel-word">الأوقات</span><br /><mark>خل الرابط يشرح عنك</mark></h2>
+          <p>بدل كل محادثة واتساب تتكرر من البداية، Linek يجمع صور مكانك وأسعاره وتوفره وسياساته في صفحة حجز موثقة توري العميل أنك مقدم خدمة واضح وتمت مراجعة بياناتك قبل أن يدفع.</p>
         </div>
         <div class="feature-grid">
           <article><div class="feature-icon pay-icon"><span>✓</span></div><h3>توثيق مقدم الخدمة</h3><p>نراجع بيانات مقدم الخدمة وفق معايير Linek قبل عرض شارة التوثيق داخل صفحة الحجز.</p></article>
           <article><div class="feature-icon guest-icon"><span>؟</span></div><h3>بطاقة ثقة للضيف</h3><p>الضيف يرى بوضوح لماذا هذا الحجز موثوق، وما الذي تحققنا منه قبل الدفع.</p></article>
-          <article><div class="feature-icon link-icon"><span>↗</span></div><h3>صفحة حجز احترافية</h3><p>صفحة باسم المكان تعرض الصور، السعر، التوفر، والسياسات بدل رسائل واتساب المتفرقة.</p></article>
+          <article><div class="feature-icon link-icon"><span>↗</span></div><h3>رابط تنشره بدل الشرح</h3><p>ضع الرابط في واتساب أو إنستقرام، والعميل يرى الصور والسعر والتوفر والسياسات في صفحة واحدة.</p></article>
           <article><div class="feature-icon calendar-icon"><b>18</b></div><h3>تقويم متزامن وسياسات واضحة</h3><p>اربط تقويمك مع المواقع الثانية في تقويم واحد لتقليل الحجوزات المتعارضة، مع عرض المتاح والسعر والسياسات قبل الحجز.</p></article>
           <article><div class="feature-icon places-icon"><i></i><i></i><i></i></div><h3>دفع مباشر حسب التكامل</h3><p>نرتب مسار دفع آمن ومباشر لحسابك حسب التكامل المتاح، دون أن نستلم مبالغ الضيوف في نموذج البداية.</p></article>
           <article><div class="feature-icon report-icon"><i></i><i></i><i></i></div><h3>متابعة عند الحاجة</h3><p>الدعم متاح للحجوزات التي تتم عبر Linek، ونتابع الحالة مع مقدم الخدمة وفق سياساتنا.</p></article>
         </div>
-        <button class="pill-button section-cta" data-start-plan="single">ابدأ تجربتك 14 يوم</button>
+        <a class="pill-button section-cta" href="owner-apply.html?plan=single">ابدأ تجربتك 14 يوم بدون بطاقة ائتمان</a>
+      </section>
+
+      <section class="product-demo section-shell" aria-labelledby="productDemoTitle">
+        <div class="section-heading centered">
+          <span>مثال بعد ما تعرف الفكرة</span>
+          <h2 id="productDemoTitle">كيف تظهر صفحة الحجز<br /><mark>لضيفك؟</mark></h2>
+          <p>هذا مجرد مثال لشكل الصفحة التي يشاركها المالك بعد المراجعة. ليست قائمة شاليه معروض من Linek، بل نموذج يوضح كيف يرى الضيف بيانات المكان والثقة قبل الدفع.</p>
+        </div>
+        <div class="product-stage" id="product">
+          <div class="stage-glow"></div>
+          <div class="booking-window">
+            <div class="window-bar">
+              <div class="mini-brand"><img src="assets/linek-mark.svg" alt="" /><span>لاينك بوكنق</span></div>
+              <span class="window-url">linek.sa/stay/example</span>
+              <div class="window-dots"><i></i><i></i><i></i></div>
+            </div>
+            <div class="window-content">
+              <div class="place-photo">
+                <img src="assets/chalet-hero.png" alt="نموذج صفحة حجز لمكان يومي" />
+                <span class="available"><i></i> مثال لعرض التوفر</span>
+              </div>
+              <div class="place-details">
+                <div>
+                  <small>مثال توضيحي لصفحة مالك</small>
+                  <div class="place-title-row">
+                    <h2 id="screenPlaceName">اسم مكانك هنا</h2>
+                    <a class="verified-badge" href="#verified" aria-label="معنى موثق من Linek"><span>✓</span> موثق من <span class="verified-linek-word"><img src="assets/linek-mark.svg" alt="" /><b>Linek</b></span></a>
+                  </div>
+                  <p id="screenPrompt">الضيف يرى التفاصيل قبل ما يحجز</p>
+                </div>
+                <div class="booking-trust-card" aria-label="لماذا هذا الحجز موثوق؟">
+                  <h3>لماذا هذا الحجز موثوق؟</h3>
+                  <ul>
+                    <li>تمت مراجعة مقدم الخدمة وفق معايير Linek.</li>
+                    <li>وسيلة استلام المدفوعات مرتبطة بالمالك حسب التكامل المتاح.</li>
+                    <li>السعر والتوفر والسياسات ظاهرة قبل قرار الدفع.</li>
+                    <li>يوجد دعم من Linek عند الحاجة.</li>
+                  </ul>
+                  <a href="#verified">ما معنى موثق من Linek؟</a>
+                </div>
+                <div class="price-box"><small>مثال للسعر</small><strong>850 <i>ر.س</i></strong><button id="screenAction">عرض الأيام المتاحة</button></div>
+              </div>
+            </div>
+          </div>
+          <div class="floating-card payment-card"><span>✓</span><div><small>دفع لحساب المالك</small><b>حسب التكامل</b></div></div>
+          <div class="floating-card booking-card"><span>01</span><div><small>صفحة خاصة</small><b>باسم مكانك</b></div></div>
+        </div>
       </section>
 
       <section class="how" id="how">
@@ -126,16 +148,16 @@
       <section class="verified-section section-shell" id="verified">
         <div class="verified-copy">
           <span>موثق من Linek</span>
-          <h2>وش يعني<br /><mark class="linek-mark-text">موثق من Linek؟</mark></h2>
-          <p>التوثيق ليس بديلاً عن شروط الحجز وسياسات مقدم الخدمة. معناه أن Linek راجع مقدم الخدمة ووسيلة استلام المدفوعات وفق معايير تشغيلية محددة، ثم يعرض ذلك للضيف بوضوح قبل الدفع.</p>
+          <h2>ليش الضيف يحتاج<br /><mark class="linek-mark-text">يثق قبل الدفع؟</mark></h2>
+          <p>لما الحجز يتم من رسائل واتساب وتحويل بنكي أو رابط دفع، كثير من العملاء يترددون: هل المكان حقيقي؟ هل الحساب صحيح؟ هل السياسات واضحة؟ Linek يعرض للضيف ما تمت مراجعته بوضوح، بدون أن يتحول إلى ضمان مطلق أو منصة تستلم مبلغ الحجز.</p>
         </div>
         <div class="verified-grid">
-          <article><small>01</small><h3>تحقق من مقدم الخدمة</h3><p>نراجع بيانات مقدم الخدمة الأساسية قبل عرض شارة التوثيق داخل صفحة الحجز.</p></article>
-          <article><small>02</small><h3>تحقق من وسيلة الدفع</h3><p>نتأكد أن وسيلة استلام المدفوعات مرتبطة بمسار واضح لصاحب المكان حسب التكامل المتاح.</p></article>
-          <article><small>03</small><h3>صفحة آمنة وواضحة</h3><p>الضيف يرى المكان، السعر، السياسات، وما تم التحقق منه قبل اتخاذ قرار الدفع.</p></article>
-          <article><small>04</small><h3>دعم ومتابعة</h3><p>إذا واجه الضيف مشكلة، يبدأ بالتواصل مع المالك، وLinek متاح للدعم والمتابعة عند الحاجة بدون إدارة الحجز نيابة عن المالك.</p></article>
+          <article><small>01</small><h3>تحقق من مقدم الخدمة</h3><p>نراجع بيانات المالك والمكان وفق معايير Linek قبل عرض شارة التوثيق داخل صفحة الحجز.</p></article>
+          <article><small>02</small><h3>طمأنة قبل التحويل</h3><p>الضيف يرى لماذا هذا الحجز أوضح: مقدم الخدمة، بيانات المكان، السياسات، ووسيلة الدفع المرتبطة بالمالك.</p></article>
+          <article><small>03</small><h3>لسنا منصة حجوزات مزدحمة</h3><p>Linek لا يضع مكانك وسط منافسين كثيرين. هو رابط خاص تنشره أنت كقناة إضافية لعملائك.</p></article>
+          <article><small>04</small><h3>لا نستلم مبالغ الضيوف</h3><p>في نموذج البداية، مبلغ الحجز يذهب لحساب المالك حسب التكامل المتاح، ورسوم Linek اشتراك تقني منفصل بعد التجربة.</p></article>
         </div>
-        <p class="verified-note">أي مشاركة للبيانات تتم وفق الأنظمة والطلبات النظامية، ونتعاون مع الجهات المختصة عند وجود طلب نظامي.</p>
+        <p class="verified-note">موثق من Linek يعني أننا نعرض للضيف ما راجعناه بوضوح. التوثيق يرفع الثقة، لكنه لا يلغي شروط الحجز أو مسؤولية الاستضافة لدى مقدم الخدمة.</p>
       </section>
 
       <section class="portfolio section-shell">
@@ -185,7 +207,7 @@
           <span>للاستفسارات والعروض الخاصة</span>
           <h2>عندك أكثر من<br /><mark>٥ أماكن؟</mark></h2>
           <p>استخدم هذا النموذج إذا عندك أكثر من خمسة أماكن أو تحتاج تسأل عن الربط والدفع قبل اختيار الباقة المناسبة.</p>
-          <div><b>14 يوم تجربة</b><b>موثق من Linek</b><b>Linek لا يستلم مبالغ الضيوف</b><b>support@linek.sa</b></div>
+          <div><b>14 يوم تجربة</b><b>موثق من Linek</b><b>Linek لا يستلم مبالغ الضيوف</b><b>info@linek.sa</b></div>
           <div class="payment-trust" aria-label="طمأنة الدفع والثقة">
             <article><span>01</span><b>توثيق مقدم الخدمة</b><p>نعرض للضيف أن مقدم الخدمة تم التحقق منه وفق معايير Linek، مع بقاء مشاركة البيانات والطلبات النظامية ضمن إطارها الرسمي.</p></article>
             <article><span>02</span><b>بطاقة ثقة قبل الدفع</b><p>الضيف يرى لماذا هذا الحجز موثوق: مقدم الخدمة، وسيلة الدفع، الصفحة الآمنة، ودعم Linek عند الحاجة.</p></article>
@@ -235,7 +257,7 @@
       </section>
     </main>
 
-    <footer><a class="brand" href="#top"><img src="assets/linek-mark.svg" alt="" /><span>لاينك بوكنق</span></a><p>صفحة حجز موثقة للشاليهات والشقق اليومية.</p><div class="footer-links"><a href="#verified">التوثيق</a><a href="#partners">شركاء لاينك</a><a href="login.html">دخول الشركاء</a><a href="linek-admin.html">لوحة Linek</a><a href="mailto:info@linek.sa">info@linek.sa</a><a href="mailto:support@linek.sa">support@linek.sa</a></div><small>© 2026 لاينك بوكنق · linek.sa · صُنع في السعودية</small></footer>
+    <footer><a class="brand" href="#top"><img src="assets/linek-mark.svg" alt="" /><span>لاينك بوكنق</span></a><p>صفحة حجز موثقة للشاليهات والشقق اليومية.</p><div class="footer-links"><a href="#verified">التوثيق</a><a href="#partners">شركاء لاينك</a><a href="login.html">دخول الشركاء</a><a href="linek-admin.html">لوحة Linek</a><a href="mailto:info@linek.sa">info@linek.sa</a></div><small>© 2026 لاينك بوكنق · linek.sa · صُنع في السعودية</small></footer>
 
     <div class="setup-modal" id="setupModal" aria-hidden="true">
       <div class="setup-backdrop" data-close-setup></div>
@@ -244,7 +266,7 @@
         <div class="setup-progress"><i class="active"></i><i></i><i></i></div>
         <form id="setupForm">
           <div class="setup-step active" data-step="1"><small>الخطوة ١ من ٣</small><h2 id="setupTitle">كم مكان عندك؟</h2><p>اختر المناسب، وتقدر تغيّره لاحقًا.</p><div class="plan-choice"><button type="button" class="active" data-plan-choice="single"><span>الأساسية</span><b><span data-price-value="single" data-number-format="arabic">١٩٩</span> <i>ر.س / شهر</i></b><small>مكان واحد</small></button><button type="button" data-plan-choice="multi"><span>النمو</span><b><span data-price-value="multi" data-number-format="arabic">٢٩٩</span> <i>ر.س / شهر</i></b><small>حتى ٥ أماكن</small></button></div><div class="setup-trial"><b data-trial-days>14 يوم تجربة</b><span>مدفوعات الضيوف لحسابك</span></div><button type="button" class="setup-next">التالي ←</button></div>
-          <div class="setup-step" data-step="2"><small>الخطوة ٢ من ٣</small><h2>عطنا بيانات البداية</h2><p>ما نطلع رابط للضيف إلا بعد ما نراجع الطلب ونقبله من لوحة Linek.</p><label>اسمك<input id="setupOwnerName" required minlength="2" pattern="^[\u0600-\u06FFa-zA-Z ]{2,}$" placeholder="الاسم الكريم" title="اكتب الاسم بحروف فقط، حرفين على الأقل" /></label><label>رقم الجوال<input id="setupOwnerPhone" required inputmode="tel" pattern="^05[0-9]{8}$" placeholder="05xxxxxxxx" title="اكتب رقم جوال سعودي يبدأ بـ 05 ويتكون من 10 أرقام" /></label><label>اسم المكان<input id="setupPlaceName" required minlength="3" value="شاليه سُكون" placeholder="مثال: شاليه سُكون" title="اكتب اسم المكان بثلاثة أحرف على الأقل" /></label><div class="setup-fields"><label>نوع المكان<select id="setupPlaceType" required><option>شاليه</option><option>شقة إيجار يومي</option><option>استراحة</option></select></label><label>المدينة<select id="setupCity" required><option>الرياض</option><option>جدة</option><option>الخبر</option><option>الطائف</option><option>العلا</option></select></label></div><label class="place-count" id="placeCountField">عدد الأماكن<input id="setupPlaceCount" type="number" required min="2" max="5" value="2" title="باقة النمو تقبل من 2 إلى 5 أماكن" /><small>حتى ٥ أماكن في الباقة</small></label><button type="button" class="setup-next" id="submitSetupLead">أرسل طلب البداية ←</button><button type="button" class="setup-back">رجوع</button></div>
+          <div class="setup-step" data-step="2"><small>الخطوة ٢ من ٣</small><h2>عطنا بيانات البداية</h2><p>ما نطلع رابط للضيف إلا بعد ما نراجع الطلب ونقبله من لوحة Linek.</p><label>اسمك<input id="setupOwnerName" required minlength="2" pattern="^[\u0600-\u06FFa-zA-Z ]{2,}$" placeholder="الاسم الكريم" title="اكتب الاسم بحروف فقط، حرفين على الأقل" /></label><label>رقم الجوال<input id="setupOwnerPhone" required inputmode="tel" pattern="^05[0-9]{8}$" placeholder="05xxxxxxxx" title="اكتب رقم جوال سعودي يبدأ بـ 05 ويتكون من 10 أرقام" /></label><label>اسم المكان<input id="setupPlaceName" required minlength="3" value="اسم مكانك" placeholder="مثال: اسم مكانك" title="اكتب اسم المكان بثلاثة أحرف على الأقل" /></label><div class="setup-fields"><label>نوع المكان<select id="setupPlaceType" required><option>شاليه</option><option>شقة إيجار يومي</option><option>استراحة</option></select></label><label>المدينة<select id="setupCity" required><option>الرياض</option><option>جدة</option><option>الخبر</option><option>الطائف</option><option>العلا</option></select></label></div><label class="place-count" id="placeCountField">عدد الأماكن<input id="setupPlaceCount" type="number" required min="2" max="5" value="2" title="باقة النمو تقبل من 2 إلى 5 أماكن" /><small>حتى ٥ أماكن في الباقة</small></label><button type="button" class="setup-next" id="submitSetupLead">أرسل طلب البداية ←</button><button type="button" class="setup-back">رجوع</button></div>
           <div class="setup-step setup-success" data-step="3"><span class="success-mark">✓</span><small>تم الاستلام</small><h2>طلب البداية وصلنا</h2><p id="setupSummary">سنراجع الطلب ونجهز رابطك بعد القبول.</p><div class="trial-expiry"><b>ما طلعنا رابط عام الآن</b><span>رابط صفحة الحجز يتولد من لوحة Linek بعد مراجعة مقدم الخدمة ووسيلة الدفع الخاصة بالمالك.</span></div><div class="setup-success-actions"><a class="pill-button" href="#contact" data-close-setup>إرسال تفاصيل إضافية</a><button type="button" class="setup-done pill-button outline" data-close-setup>إغلاق</button></div></div>
         </form>
       </section>
