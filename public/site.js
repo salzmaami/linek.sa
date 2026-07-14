@@ -22,15 +22,15 @@ const placeModes = {
   single: {
     title: 'صفحة موثقة تليق بمكانك',
     description: 'صورك، وصفك، موقعك، بطاقة التوثيق، وسياسات الحجز في صفحة واضحة تبني الثقة قبل الدفع.',
-    name: 'شاليه سُكون',
-    prompt: 'موثق من Linek · اختر تاريخك المناسب',
+    name: 'اسم مكانك هنا',
+    prompt: 'موثق من Linek · التفاصيل واضحة قبل الدفع',
     action: 'عرض الأيام المتاحة'
   },
   multi: {
-    title: 'كل أماكنك موثقة في منصة واحدة',
+    title: 'كل أماكنك بروابط موثقة من قناة واحدة',
     description: 'اعرض شاليهاتك أو شققك اليومية معًا، ولكل مكان صفحته الموثقة وتقويمه وسعره وبطاقة الثقة الخاصة به.',
-    name: 'مجموعة سُكون · ٣ أماكن',
-    prompt: 'أماكن موثقة من Linek',
+    name: 'مجموعة أماكنك',
+    prompt: 'كل مكان له صفحة موثقة',
     action: 'استعرض كل الأماكن'
   }
 };
@@ -144,7 +144,7 @@ function setPlan(plan) {
 }
 
 function openSetup(plan = 'single') {
-  const target = new URL('owner-apply.html', window.location.href);
+  const target = new URL('register.html', window.location.href);
   target.searchParams.set('plan', plan);
   window.location.href = target.toString();
 }
